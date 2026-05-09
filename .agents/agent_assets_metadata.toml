@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "S8gpd_1Bql9fBP0TYpGM2"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/swaddle.png"
+type = "image"
+title = "Baby swaddle blanket on bed"
+
+[[generated]]
+id = "C1aI5K5kqoV_rcaDrF_zy"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/pillow.png"
+type = "image"
+title = "Maternity body pillow"
+
+[[generated]]
+id = "WurraAwPYaWvBzi26pwPL"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/bra.png"
+type = "image"
+title = "Seamless nursing bra"
+
+[[generated]]
+id = "algx8cUZTmgwNwk37bkr8"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/nappies.png"
+type = "image"
+title = "Eco nappy subscription box"

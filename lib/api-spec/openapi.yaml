@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Nexpoint Funnel IQ — AI-assisted funnel drop-off diagnosis tool and Happy Mom campaign tracking API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: events
+    description: Funnel event tracking
+  - name: analytics
+    description: Funnel analytics and metrics
+  - name: customers
+    description: Customer data
+  - name: products
+    description: Product catalogue
+  - name: reviews
+    description: Customer reviews and mood
+  - name: ai
+    description: AI-generated funnel insights
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,671 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Event Tracking ──────────────────────────────────────────────────────────
+  /events:
+    post:
+      operationId: trackEvent
+      tags: [events]
+      summary: Track a funnel event (click, view, add_to_cart, etc.)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "201":
+          description: Event recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FunnelEvent"
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List all funnel events with optional filters
+      parameters:
+        - in: query
+          name: eventType
+          schema:
+            type: string
+        - in: query
+          name: sessionId
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FunnelEvent"
+
+  # ─── Analytics ───────────────────────────────────────────────────────────────
+  /analytics/funnel-summary:
+    get:
+      operationId: getFunnelSummary
+      tags: [analytics]
+      summary: High-level funnel metrics — banner clicks, cart adds, conversions, drop-off rates
+      responses:
+        "200":
+          description: Funnel summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FunnelSummary"
+
+  /analytics/campaign-metrics:
+    get:
+      operationId: getCampaignMetrics
+      tags: [analytics]
+      summary: Mother's Day campaign specific metrics — banner CTR, discount item views, conversions
+      responses:
+        "200":
+          description: Campaign metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CampaignMetrics"
+
+  /analytics/traffic:
+    get:
+      operationId: getSiteTraffic
+      tags: [analytics]
+      summary: Active site traffic and visitor trends over time
+      responses:
+        "200":
+          description: Traffic data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrafficData"
+
+  /analytics/customer-trends:
+    get:
+      operationId: getCustomerTrends
+      tags: [analytics]
+      summary: Active customer trends, repeat rate, subscription stats
+      responses:
+        "200":
+          description: Customer trend data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerTrends"
+
+  /analytics/drop-off:
+    get:
+      operationId: getDropOffAnalysis
+      tags: [analytics]
+      summary: Funnel drop-off breakdown by stage with reasons
+      responses:
+        "200":
+          description: Drop-off analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DropOffAnalysis"
+
+  /analytics/mood:
+    get:
+      operationId: getMoodAnalysis
+      tags: [analytics]
+      summary: Customer mood/sentiment breakdown from ratings and reviews
+      responses:
+        "200":
+          description: Mood analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoodAnalysis"
+
+  # ─── Customers ───────────────────────────────────────────────────────────────
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List customers with subscription and repeat status
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [all, repeat, new, subscribed]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create/register a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "201":
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get a customer by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "404":
+          description: Not found
+
+  # ─── Products ────────────────────────────────────────────────────────────────
+  /products:
+    get:
+      operationId: listProducts
+      tags: [products]
+      summary: List products, optionally filtering by campaign/discount
+      parameters:
+        - in: query
+          name: onSale
+          schema:
+            type: boolean
+        - in: query
+          name: category
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      tags: [products]
+      summary: Create a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+
+  /products/{id}:
+    get:
+      operationId: getProduct
+      tags: [products]
+      summary: Get a product by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+
+  # ─── Reviews ─────────────────────────────────────────────────────────────────
+  /reviews:
+    get:
+      operationId: listReviews
+      tags: [reviews]
+      summary: List customer reviews and ratings
+      parameters:
+        - in: query
+          name: productId
+          schema:
+            type: integer
+        - in: query
+          name: minRating
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a customer review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
+  # ─── AI Insights ─────────────────────────────────────────────────────────────
+  /ai/diagnose:
+    post:
+      operationId: diagnoseFunnel
+      tags: [ai]
+      summary: Run AI diagnosis on the current funnel data and return drop-off insights + experiments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnoseInput"
+      responses:
+        "200":
+          description: AI diagnosis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisResult"
+
+  /ai/experiments:
+    get:
+      operationId: listExperiments
+      tags: [ai]
+      summary: Get list of previously generated experiment suggestions
+      responses:
+        "200":
+          description: Experiments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Experiment"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ─── Events ──────────────────────────────────────────────────────────────
+    FunnelEvent:
+      type: object
+      required: [id, eventType, sessionId, createdAt]
+      properties:
+        id:          { type: integer }
+        eventType:   { type: string }
+        sessionId:   { type: string }
+        customerId:  { type: ["integer", "null"] }
+        productId:   { type: ["integer", "null"] }
+        metadata:    { type: ["string", "null"] }
+        createdAt:   { type: string, format: date-time }
+
+    EventInput:
+      type: object
+      required: [eventType, sessionId]
+      properties:
+        eventType:
+          type: string
+          enum:
+            - page_view
+            - banner_click
+            - product_view
+            - add_to_cart
+            - add_to_wishlist
+            - checkout_start
+            - purchase
+            - subscription_start
+            - subscription_cancel
+            - nappy_subscription_click
+            - sale_item_view
+            - browse_only
+        sessionId:   { type: string }
+        customerId:  { type: ["integer", "null"] }
+        productId:   { type: ["integer", "null"] }
+        metadata:    { type: ["string", "null"] }
+
+    # ─── Analytics ───────────────────────────────────────────────────────────
+    FunnelSummary:
+      type: object
+      required:
+        [totalVisitors, bannerClicks, bannerCTR, productViews, addToCart, addToWishlist,
+         checkoutStarts, purchases, conversionRate, repeatCustomerRate]
+      properties:
+        totalVisitors:      { type: integer }
+        bannerClicks:       { type: integer }
+        bannerCTR:          { type: number }
+        productViews:       { type: integer }
+        saleItemViews:      { type: integer }
+        browseOnlyCount:    { type: integer }
+        addToCart:          { type: integer }
+        addToWishlist:      { type: integer }
+        checkoutStarts:     { type: integer }
+        purchases:          { type: integer }
+        conversionRate:     { type: number }
+        repeatCustomerRate: { type: number }
+
+    CampaignMetrics:
+      type: object
+      required: [campaignName, bannerClicks, discountItemViews, discountItemPurchases,
+                 browseOnlyVisitors, nappySubscriptions, totalRevenue]
+      properties:
+        campaignName:           { type: string }
+        bannerClicks:           { type: integer }
+        discountItemViews:      { type: integer }
+        discountItemPurchases:  { type: integer }
+        browseOnlyVisitors:     { type: integer }
+        nappySubscriptions:     { type: integer }
+        totalRevenue:           { type: number }
+        revenueByDay:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyRevenue"
+
+    DailyRevenue:
+      type: object
+      required: [date, revenue, orders]
+      properties:
+        date:    { type: string }
+        revenue: { type: number }
+        orders:  { type: integer }
+
+    TrafficData:
+      type: object
+      required: [activeNow, totalToday, totalThisWeek, hourlyTraffic, dailyTraffic]
+      properties:
+        activeNow:      { type: integer }
+        totalToday:     { type: integer }
+        totalThisWeek:  { type: integer }
+        hourlyTraffic:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrafficPoint"
+        dailyTraffic:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrafficPoint"
+
+    TrafficPoint:
+      type: object
+      required: [label, visitors]
+      properties:
+        label:    { type: string }
+        visitors: { type: integer }
+
+    CustomerTrends:
+      type: object
+      required: [totalCustomers, newThisMonth, repeatCustomers, repeatRate,
+                 activeSubscriptions, avgSubscriptionDays, churnedThisMonth,
+                 monthlyTrend]
+      properties:
+        totalCustomers:       { type: integer }
+        newThisMonth:         { type: integer }
+        repeatCustomers:      { type: integer }
+        repeatRate:           { type: number }
+        activeSubscriptions:  { type: integer }
+        avgSubscriptionDays:  { type: number }
+        churnedThisMonth:     { type: integer }
+        monthlyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyCustomerPoint"
+
+    MonthlyCustomerPoint:
+      type: object
+      required: [month, newCustomers, repeatCustomers, subscriptions]
+      properties:
+        month:           { type: string }
+        newCustomers:    { type: integer }
+        repeatCustomers: { type: integer }
+        subscriptions:   { type: integer }
+
+    DropOffAnalysis:
+      type: object
+      required: [stages, topDropOffStage, dropOffReasons]
+      properties:
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/FunnelStage"
+        topDropOffStage: { type: string }
+        dropOffReasons:
+          type: array
+          items:
+            $ref: "#/components/schemas/DropOffReason"
+
+    FunnelStage:
+      type: object
+      required: [stage, users, dropOff, dropOffRate]
+      properties:
+        stage:       { type: string }
+        users:       { type: integer }
+        dropOff:     { type: integer }
+        dropOffRate: { type: number }
+
+    DropOffReason:
+      type: object
+      required: [reason, count, percentage]
+      properties:
+        reason:     { type: string }
+        count:      { type: integer }
+        percentage: { type: number }
+
+    MoodAnalysis:
+      type: object
+      required: [averageRating, totalReviews, ratingDistribution, sentimentScore,
+                 topPositiveThemes, topNegativeThemes]
+      properties:
+        averageRating:      { type: number }
+        totalReviews:       { type: integer }
+        ratingDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingCount"
+        sentimentScore:       { type: number }
+        topPositiveThemes:
+          type: array
+          items:
+            { type: string }
+        topNegativeThemes:
+          type: array
+          items:
+            { type: string }
+
+    RatingCount:
+      type: object
+      required: [stars, count]
+      properties:
+        stars: { type: integer }
+        count: { type: integer }
+
+    # ─── Customers ───────────────────────────────────────────────────────────
+    Customer:
+      type: object
+      required: [id, name, email, isRepeat, isSubscribed, createdAt]
+      properties:
+        id:                 { type: integer }
+        name:               { type: string }
+        email:              { type: string }
+        isRepeat:           { type: boolean }
+        isSubscribed:       { type: boolean }
+        subscriptionDays:   { type: ["integer", "null"] }
+        subscriptionPlan:   { type: ["string", "null"] }
+        totalOrders:        { type: integer }
+        totalSpend:         { type: number }
+        source:             { type: ["string", "null"] }
+        createdAt:          { type: string, format: date-time }
+
+    CustomerInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:             { type: string }
+        email:            { type: string }
+        isRepeat:         { type: boolean }
+        isSubscribed:     { type: boolean }
+        subscriptionDays: { type: ["integer", "null"] }
+        subscriptionPlan: { type: ["string", "null"] }
+        totalOrders:      { type: integer }
+        totalSpend:       { type: number }
+        source:           { type: ["string", "null"] }
+
+    # ─── Products ────────────────────────────────────────────────────────────
+    Product:
+      type: object
+      required: [id, name, category, price, onSale, imageUrl, createdAt]
+      properties:
+        id:           { type: integer }
+        name:         { type: string }
+        category:     { type: string }
+        price:        { type: number }
+        salePrice:    { type: ["number", "null"] }
+        onSale:       { type: boolean }
+        imageUrl:     { type: ["string", "null"] }
+        description:  { type: ["string", "null"] }
+        isNappySub:   { type: boolean }
+        createdAt:    { type: string, format: date-time }
+
+    ProductInput:
+      type: object
+      required: [name, category, price]
+      properties:
+        name:        { type: string }
+        category:    { type: string }
+        price:       { type: number }
+        salePrice:   { type: ["number", "null"] }
+        onSale:      { type: boolean }
+        imageUrl:    { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        isNappySub:  { type: boolean }
+
+    # ─── Reviews ─────────────────────────────────────────────────────────────
+    Review:
+      type: object
+      required: [id, customerId, productId, rating, createdAt]
+      properties:
+        id:         { type: integer }
+        customerId: { type: integer }
+        productId:  { type: integer }
+        rating:     { type: integer }
+        title:      { type: ["string", "null"] }
+        body:       { type: ["string", "null"] }
+        sentiment:  { type: ["string", "null"] }
+        createdAt:  { type: string, format: date-time }
+
+    ReviewInput:
+      type: object
+      required: [customerId, productId, rating]
+      properties:
+        customerId: { type: integer }
+        productId:  { type: integer }
+        rating:     { type: integer }
+        title:      { type: ["string", "null"] }
+        body:       { type: ["string", "null"] }
+        sentiment:  { type: ["string", "null"] }
+
+    # ─── AI ──────────────────────────────────────────────────────────────────
+    DiagnoseInput:
+      type: object
+      required: [funnelStage]
+      properties:
+        funnelStage:
+          type: string
+          description: The stage to focus the diagnosis on (e.g. "checkout", "cart", "banner")
+        additionalContext:
+          type: ["string", "null"]
+
+    DiagnosisResult:
+      type: object
+      required: [summary, topInsights, experiments, generatedAt]
+      properties:
+        summary:      { type: string }
+        topInsights:
+          type: array
+          items:
+            $ref: "#/components/schemas/Insight"
+        experiments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Experiment"
+        generatedAt:  { type: string, format: date-time }
+
+    Insight:
+      type: object
+      required: [title, description, severity]
+      properties:
+        title:       { type: string }
+        description: { type: string }
+        severity:    { type: string, enum: [low, medium, high, critical] }
+
+    Experiment:
+      type: object
+      required: [id, title, hypothesis, expectedImpact, effort, funnelStage, createdAt]
+      properties:
+        id:             { type: integer }
+        title:          { type: string }
+        hypothesis:     { type: string }
+        expectedImpact: { type: string }
+        effort:         { type: string, enum: [low, medium, high] }
+        funnelStage:    { type: string }
+        status:         { type: string, enum: [proposed, active, completed, rejected] }
+        createdAt:      { type: string, format: date-time }
