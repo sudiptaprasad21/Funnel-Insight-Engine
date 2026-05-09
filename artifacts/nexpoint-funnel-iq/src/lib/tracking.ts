@@ -1,4 +1,5 @@
 import { EventInputEventType } from "@workspace/api-client-react";
+import { getStoredCustomerId } from "./auth";
 
 export const getSessionId = () => {
   let sessionId = localStorage.getItem('hm_session');
@@ -26,7 +27,7 @@ export const trackFunnelEvent = async (
         sessionId: getSessionId(),
         metadata,
         productId,
-        customerId
+        customerId: customerId ?? getStoredCustomerId() ?? undefined,
       }),
     });
   } catch (error) {
