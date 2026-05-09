@@ -1,32 +1,23 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { trackFunnelEvent } from "@/lib/tracking";
 import { getStoredCustomerName, clearCustomer, isLoggedIn } from "@/lib/auth";
+import {
+  addToCart,
+  addToWishlist,
+  removeFromWishlist,
+  getCartCount,
+  getWishlistIds,
+} from "@/lib/store";
+import { PRODUCT_IMAGES, FALLBACK_IMAGE } from "@/lib/product-images";
+import bambooNappiesImg from "@/assets/images/bamboo-nappies.png";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, ShoppingCart, Star, Check } from "lucide-react";
-import nursingBraImg from "@/assets/images/nursing-bra.png";
-import bambooNappiesImg from "@/assets/images/bamboo-nappies.png";
-import bellyButterImg from "@/assets/images/belly-butter.png";
-import swaddleBlanketsImg from "@/assets/images/swaddle-blankets.png";
-import sleepGroBagImg from "@/assets/images/sleep-gro-bag.png";
-import breastPumpImg from "@/assets/images/breast-pump.png";
-import pyjamaSetImg from "@/assets/images/pyjama-set.png";
-import recoveryKitImg from "@/assets/images/recovery-kit.png";
+import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const PRODUCT_IMAGES: Record<number, string> = {
-  1: nursingBraImg,
-  2: bambooNappiesImg,
-  3: bellyButterImg,
-  4: swaddleBlanketsImg,
-  5: sleepGroBagImg,
-  6: breastPumpImg,
-  7: pyjamaSetImg,
-  8: recoveryKitImg,
-};
 
 const SALE_END = new Date("2026-05-31T23:59:59");
 
@@ -41,12 +32,13 @@ function HappyMomLogo({ className }: { className?: string }) {
 }
 
 export default function LandingPage() {
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const customerName = getStoredCustomerName();
 
   const [timeLeft, setTimeLeft] = useState(SALE_END.getTime() - Date.now());
-  const [cartCount, setCartCount] = useState(0);
-  const [wishlistIds, setWishlistIds] = useState<Set<number>>(new Set());
+  const [cartCount, setCartCount] = useState(() => getCartCount());
+  const [wishlistIds, setWishlistIds] = useState<Set<number>>(() => getWishlistIds());
   const [cartFlash, setCartFlash] = useState(false);
 
   useEffect(() => {
@@ -78,8 +70,16 @@ export default function LandingPage() {
     trackFunnelEvent(isSale ? "sale_item_view" : "browse_only", undefined, productId);
   };
 
-  const handleAddToCart = (productId: number, productName: string) => {
+  const handleAddToCart = (
+    productId: number,
+    productName: string,
+    price: number,
+    salePrice: number | null,
+    onSale: boolean,
+    category: string,
+  ) => {
     trackFunnelEvent("add_to_cart", undefined, productId);
+    addToCart({ productId, name: productName, price, salePrice, onSale, category });
     setCartCount((c) => c + 1);
     setCartFlash(true);
     setTimeout(() => setCartFlash(false), 500);
@@ -89,28 +89,28 @@ export default function LandingPage() {
     });
   };
 
-  const handleAddToWishlist = (productId: number, productName: string) => {
+  const handleAddToWishlist = (
+    productId: number,
+    productName: string,
+    price: number,
+    salePrice: number | null,
+    onSale: boolean,
+    category: string,
+  ) => {
     trackFunnelEvent("add_to_wishlist", undefined, productId);
     setWishlistIds((prev) => {
       const next = new Set(prev);
       if (next.has(productId)) {
+        removeFromWishlist(productId);
         next.delete(productId);
         toast({ title: "Removed from wishlist", description: productName });
       } else {
+        addToWishlist({ productId, name: productName, price, salePrice, onSale, category });
         next.add(productId);
         toast({ title: "Saved to wishlist!", description: `${productName} added to your wishlist.` });
       }
       return next;
     });
-  };
-
-  const handleCheckout = () => {
-    trackFunnelEvent("checkout_start");
-    if (cartCount === 0) {
-      toast({ title: "Your cart is empty", description: "Add some products before checking out." });
-      return;
-    }
-    toast({ title: "Proceeding to checkout…", description: `${cartCount} item${cartCount > 1 ? "s" : ""} in cart.` });
   };
 
   const handleSubscribe = () => {
@@ -153,7 +153,7 @@ export default function LandingPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => trackFunnelEvent("browse_only")}
+              onClick={() => navigate("/wishlist")}
               data-testid="button-header-wishlist"
               className="relative"
             >
@@ -167,7 +167,7 @@ export default function LandingPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleCheckout}
+              onClick={() => navigate("/cart")}
               data-testid="button-header-cart"
               className={`relative transition-transform ${cartFlash ? "scale-125" : ""}`}
             >
@@ -249,7 +249,7 @@ export default function LandingPage() {
                 </div>
               ))
             : products?.map((product) => {
-                const imgSrc = PRODUCT_IMAGES[product.id] ?? nursingBraImg;
+                const imgSrc = PRODUCT_IMAGES[product.id] ?? FALLBACK_IMAGE;
 
                 const inWishlist = wishlistIds.has(product.id);
 
@@ -299,7 +299,14 @@ export default function LandingPage() {
                           className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800 active:scale-95 transition-transform"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleAddToCart(product.id, product.name);
+                            handleAddToCart(
+                              product.id,
+                              product.name,
+                              Number(product.price),
+                              product.salePrice != null ? Number(product.salePrice) : null,
+                              product.onSale,
+                              product.category,
+                            );
                           }}
                           data-testid={`button-add-cart-${product.id}`}
                         >
@@ -315,7 +322,14 @@ export default function LandingPage() {
                           }`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleAddToWishlist(product.id, product.name);
+                            handleAddToWishlist(
+                              product.id,
+                              product.name,
+                              Number(product.price),
+                              product.salePrice != null ? Number(product.salePrice) : null,
+                              product.onSale,
+                              product.category,
+                            );
                           }}
                           data-testid={`button-wishlist-${product.id}`}
                         >
