@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { trackFunnelEvent } from "@/lib/tracking";
-import { getStoredCustomerName, clearCustomer, hasVisited } from "@/lib/auth";
+import { getStoredCustomerName, clearCustomer, isLoggedIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,7 +35,7 @@ export default function LandingPage() {
   const [cartFlash, setCartFlash] = useState(false);
 
   useEffect(() => {
-    if (!hasVisited()) {
+    if (!isLoggedIn()) {
       window.location.replace("/login");
       return;
     }

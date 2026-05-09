@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { storeCustomer, setGuestMode } from "@/lib/auth";
+import { storeCustomer } from "@/lib/auth";
 import { Phone, Mail, User, ArrowRight, Loader2 } from "lucide-react";
 
 async function createCustomer(
@@ -88,11 +88,6 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGuest = () => {
-    setGuestMode();
-    goToStore();
   };
 
   return (
@@ -273,15 +268,6 @@ export default function AuthPage() {
                 </TabsContent>
               </Tabs>
 
-              <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-                <button
-                  type="button"
-                  onClick={handleGuest}
-                  className="text-sm text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
-                >
-                  Continue as guest →
-                </button>
-              </div>
             </CardContent>
           </Card>
 
