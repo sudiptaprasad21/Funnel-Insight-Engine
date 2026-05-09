@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { trackFunnelEvent } from "@/lib/tracking";
-import { getStoredCustomerName, clearCustomer } from "@/lib/auth";
+import { getStoredCustomerName, clearCustomer, hasVisited } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,6 +35,10 @@ export default function LandingPage() {
   const [cartFlash, setCartFlash] = useState(false);
 
   useEffect(() => {
+    if (!hasVisited()) {
+      window.location.replace("/login");
+      return;
+    }
     trackFunnelEvent("page_view");
     const timer = setInterval(() => {
       setTimeLeft(SALE_END.getTime() - Date.now());
