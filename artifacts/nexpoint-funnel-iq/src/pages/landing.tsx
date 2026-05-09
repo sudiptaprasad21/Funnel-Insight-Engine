@@ -6,12 +6,27 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, ShoppingCart, Star, Check } from "lucide-react";
-import swaddleImg from "@/assets/images/swaddle.png";
-import pillowImg from "@/assets/images/pillow.png";
-import braImg from "@/assets/images/bra.png";
-import nappiesImg from "@/assets/images/nappies.png";
+import nursingBraImg from "@/assets/images/nursing-bra.png";
+import bambooNappiesImg from "@/assets/images/bamboo-nappies.png";
+import bellyButterImg from "@/assets/images/belly-butter.png";
+import swaddleBlanketsImg from "@/assets/images/swaddle-blankets.png";
+import sleepGroBagImg from "@/assets/images/sleep-gro-bag.png";
+import breastPumpImg from "@/assets/images/breast-pump.png";
+import pyjamaSetImg from "@/assets/images/pyjama-set.png";
+import recoveryKitImg from "@/assets/images/recovery-kit.png";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const PRODUCT_IMAGES: Record<number, string> = {
+  1: nursingBraImg,
+  2: bambooNappiesImg,
+  3: bellyButterImg,
+  4: swaddleBlanketsImg,
+  5: sleepGroBagImg,
+  6: breastPumpImg,
+  7: pyjamaSetImg,
+  8: recoveryKitImg,
+};
 
 const SALE_END = new Date("2026-05-31T23:59:59");
 
@@ -234,10 +249,7 @@ export default function LandingPage() {
                 </div>
               ))
             : products?.map((product) => {
-                let imgSrc = product.imageUrl || swaddleImg;
-                if (product.name.toLowerCase().includes("pillow")) imgSrc = pillowImg;
-                else if (product.name.toLowerCase().includes("bra")) imgSrc = braImg;
-                else if (product.name.toLowerCase().includes("napp")) imgSrc = nappiesImg;
+                const imgSrc = PRODUCT_IMAGES[product.id] ?? nursingBraImg;
 
                 const inWishlist = wishlistIds.has(product.id);
 
@@ -327,7 +339,7 @@ export default function LandingPage() {
           <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-red-100 flex flex-col md:flex-row">
             <div className="md:w-1/2 relative bg-slate-50 min-h-[300px]">
               <img
-                src={nappiesImg}
+                src={bambooNappiesImg}
                 alt="Eco Nappy Subscription"
                 className="object-cover h-full w-full absolute inset-0"
               />

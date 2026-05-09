@@ -24,3 +24,51 @@ id = "algx8cUZTmgwNwk37bkr8"
 uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/nappies.png"
 type = "image"
 title = "Eco nappy subscription box"
+
+[[generated]]
+id = "KVKZfL_QzVPfwvhZw2Mn5"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/nursing-bra.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "KxmGKJaHOOTPxsG6WtmgP"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/bamboo-nappies.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "egDWnELcbZ6jqWAPCWp6K"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/belly-butter.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "d81HcA4UeEH-pjmCjLsfr"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/swaddle-blankets.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "G9HEutE058l1B-SbhmdLl"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/sleep-gro-bag.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "JIvtOagTClt7UgJdwVHfb"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/breast-pump.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "6Wr76wWAtv6IADGa07cOL"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/pyjama-set.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ELCTSru6qdblIstQHhGgf"
+uri = "file://artifacts/nexpoint-funnel-iq/src/assets/images/recovery-kit.png"
+type = "image"
+title = "generated_image"
