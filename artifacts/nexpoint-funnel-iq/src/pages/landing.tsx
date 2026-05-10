@@ -414,8 +414,8 @@ export default function LandingPage() {
                   <p className="text-3xl font-black leading-tight">SAVE 15%</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs opacity-80 line-through">MRP ₹450/month</p>
-                  <p className="text-2xl font-black">₹383<span className="text-sm font-medium">/month</span></p>
+                  <p className="text-xs opacity-80 line-through">MRP ₹3,900/month</p>
+                  <p className="text-2xl font-black">₹3,315<span className="text-sm font-medium">/month</span></p>
                 </div>
               </motion.div>
 
@@ -423,11 +423,11 @@ export default function LandingPage() {
               <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-600 text-sm">MRP (monthly box)</span>
-                  <span className="text-slate-400 line-through font-semibold">₹450</span>
+                  <span className="text-slate-400 line-through font-semibold">₹3,900</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-700 font-semibold text-sm">Your subscription price</span>
-                  <span className="text-green-700 font-bold text-lg">₹383 / month</span>
+                  <span className="text-green-700 font-bold text-lg">₹3,315 / month</span>
                 </div>
                 <div className="h-px bg-green-200" />
                 <div className="flex items-center justify-between">
@@ -437,13 +437,13 @@ export default function LandingPage() {
                     transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
                     className="text-green-600 font-black text-2xl"
                   >
-                    ₹804
+                    ₹7,020
                   </motion.span>
                 </div>
                 <div className="bg-white rounded-xl px-4 py-3 text-xs text-slate-600 border border-green-100">
                   <p className="font-semibold text-slate-700 mb-1">📦 Monthly consumption estimate</p>
                   <p>~4 nappies/day × 30 days = <strong>~120 nappies</strong> covered per box</p>
-                  <p className="mt-0.5 text-green-700 font-medium">= ₹67/month × 12 months = <strong>₹804 saved per year</strong></p>
+                  <p className="mt-0.5 text-green-700 font-medium">= ₹585/month × 12 months = <strong>₹7,020 saved per year</strong></p>
                 </div>
               </div>
 
@@ -469,7 +469,7 @@ export default function LandingPage() {
                 onClick={handleSubscribe}
                 data-testid="button-subscribe-nappies"
               >
-                Subscribe Now — Save ₹67 Every Month
+                Subscribe Now — Save ₹7,020 Every Year
               </Button>
             </div>
           </div>
