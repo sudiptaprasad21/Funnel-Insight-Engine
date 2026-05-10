@@ -16,6 +16,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
@@ -43,6 +53,7 @@ export default function LandingPage() {
   const [wishlistIds, setWishlistIds] = useState<Set<number>>(() => getWishlistIds());
   const [cartFlash, setCartFlash] = useState(false);
   const [detailProduct, setDetailProduct] = useState<NonNullable<typeof products>[number] | null>(null);
+  const [showSubConfirm, setShowSubConfirm] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -247,22 +258,32 @@ export default function LandingPage() {
             Our biggest Mother's Day sale runs all of May. Treat yourself or a special mom with our premium organic collection.
           </p>
 
-          <div className="inline-flex items-center gap-4 bg-white/60 backdrop-blur px-8 py-4 rounded-2xl shadow-sm border border-red-100 mb-10">
+          <motion.div
+            animate={{ scale: [1, 1.02, 1], boxShadow: ["0 0 0px rgba(220,38,38,0)", "0 0 18px rgba(220,38,38,0.25)", "0 0 0px rgba(220,38,38,0)"] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            className="inline-flex items-center gap-4 bg-white/60 backdrop-blur px-8 py-4 rounded-2xl border border-red-100 mb-10"
+          >
             <CountBox value={days} label="Days" />
             <span className="text-2xl text-red-300 font-light">:</span>
             <CountBox value={hours} label="Hours" />
             <span className="text-2xl text-red-300 font-light">:</span>
             <CountBox value={minutes} label="Mins" />
-          </div>
+          </motion.div>
 
           <div>
-            <Button
-              size="lg"
-              className="bg-red-600 hover:bg-red-700 text-white rounded-full px-8 h-14 text-lg"
-              onClick={(e) => { e.stopPropagation(); handleShopSale(); }}
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 1.0, repeat: Infinity, ease: "easeInOut" }}
+              className="inline-block"
             >
-              Shop the Sale
-            </Button>
+              <Button
+                size="lg"
+                className="bg-red-600 hover:bg-red-700 text-white rounded-full px-8 h-14 text-lg shadow-lg shadow-red-300"
+                onClick={(e) => { e.stopPropagation(); handleShopSale(); }}
+              >
+                Shop the Sale
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -461,7 +482,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-14 text-lg w-full sm:w-auto"
-                onClick={handleSubscribe}
+                onClick={() => setShowSubConfirm(true)}
                 data-testid="button-subscribe-nappies"
               >
                 Subscribe Now — Save ₹7,020 Every Year
@@ -588,6 +609,27 @@ export default function LandingPage() {
           </Button>
         </div>
       </footer>
+
+      {/* Subscription Confirmation Dialog */}
+      <AlertDialog open={showSubConfirm} onOpenChange={setShowSubConfirm}>
+        <AlertDialogContent className="rounded-2xl max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-xl">Confirm your subscription</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 leading-relaxed">
+              You're subscribing to <strong>Premium Bamboo Nappies</strong> at <strong>₹3,315/month</strong> (15% off MRP ₹3,900). Cancel anytime.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="rounded-xl">Not now</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white rounded-xl"
+              onClick={handleSubscribe}
+            >
+              Yes, subscribe
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
