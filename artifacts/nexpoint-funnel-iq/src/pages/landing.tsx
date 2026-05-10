@@ -440,11 +440,6 @@ export default function LandingPage() {
                     ₹7,020
                   </motion.span>
                 </div>
-                <div className="bg-white rounded-xl px-4 py-3 text-xs text-slate-600 border border-green-100">
-                  <p className="font-semibold text-slate-700 mb-1">📦 Monthly consumption estimate</p>
-                  <p>~4 nappies/day × 30 days = <strong>~120 nappies</strong> covered per box</p>
-                  <p className="mt-0.5 text-green-700 font-medium">= ₹585/month × 12 months = <strong>₹7,020 saved per year</strong></p>
-                </div>
               </div>
 
               <ul className="space-y-3 mb-8">
