@@ -204,22 +204,35 @@ router.get("/analytics/customer-trends", async (req, res): Promise<void> => {
       ? parseFloat(((repeatCustomers / customers.length) * 100).toFixed(1))
       : 0;
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May"];
-  const monthlyTrend = months.map((month, i) => ({
-    month,
-    newCustomers: 18 + i * 7 + Math.floor(Math.random() * 8),
-    repeatCustomers: 8 + i * 4 + Math.floor(Math.random() * 5),
-    subscriptions: 3 + i * 3 + Math.floor(Math.random() * 4),
-  }));
+  // Compute real monthly breakdown from actual customer createdAt timestamps
+  const monthlyTrend = Array.from({ length: 5 }, (_, i) => {
+    const offsetMonths = 4 - i; // 4 months ago → 0 months ago
+    const d = new Date(now.getFullYear(), now.getMonth() - offsetMonths, 1);
+    const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+    const label = monthStart.toLocaleDateString("en-US", { month: "short" });
+
+    const inMonth = customers.filter((c) => {
+      const t = new Date(c.createdAt).getTime();
+      return t >= monthStart.getTime() && t <= monthEnd.getTime();
+    });
+
+    return {
+      month: label,
+      newCustomers: inMonth.filter((c) => !c.isRepeat).length,
+      repeatCustomers: inMonth.filter((c) => c.isRepeat).length,
+      subscriptions: inMonth.filter((c) => c.isSubscribed).length,
+    };
+  });
 
   res.json({
     totalCustomers: customers.length,
-    newThisMonth: Math.max(newThisMonth, 3),
+    newThisMonth,
     repeatCustomers,
     repeatRate,
     activeSubscriptions,
     avgSubscriptionDays,
-    churnedThisMonth: Math.max(1, Math.floor(activeSubscriptions * 0.05)),
+    churnedThisMonth: activeSubscriptions > 0 ? Math.floor(activeSubscriptions * 0.05) : 0,
     monthlyTrend,
   });
 });
