@@ -59,7 +59,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Mother's Day Campaign Analytics & AI Diagnosis</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricCard
             title="Total Visitors"
             value={summary?.totalVisitors}
@@ -89,6 +89,18 @@ export default function DashboardPage() {
             value={summary ? `${(summary.repeatCustomerRate * 100).toFixed(1)}%` : undefined}
             loading={summaryLoading}
             icon={<RefreshCw className="h-4 w-4 text-orange-500" />}
+          />
+          <MetricCard
+            title="Total Customers"
+            value={customerTrends?.totalCustomers}
+            loading={trendsLoading}
+            icon={<Users className="h-4 w-4 text-indigo-500" />}
+          />
+          <MetricCard
+            title="Active Subscribers"
+            value={customerTrends?.activeSubscriptions}
+            loading={trendsLoading}
+            icon={<TrendingUp className="h-4 w-4 text-emerald-500" />}
           />
         </div>
 
