@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { trackFunnelEvent } from "@/lib/tracking";
 import { getStoredCustomerName, getStoredCustomerId, clearCustomer, isLoggedIn } from "@/lib/auth";
 import {
@@ -386,46 +387,89 @@ export default function LandingPage() {
       {/* Subscription Section */}
       <section className="py-24 bg-red-50/50">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-red-100 flex flex-col md:flex-row">
-            <div className="md:w-1/2 relative bg-slate-50 min-h-[300px]">
+          <div className="bg-white rounded-[2rem] overflow-hidden shadow-lg border border-green-100 flex flex-col md:flex-row">
+            <div className="md:w-1/2 relative bg-slate-50 min-h-[360px]">
               <img
                 src={bambooNappiesImg}
                 alt="Eco Nappy Subscription"
                 className="object-cover h-full w-full absolute inset-0"
               />
             </div>
-            <div className="md:w-1/2 p-12 md:p-16 flex flex-col justify-center">
-              <Badge className="w-fit bg-red-100 text-red-800 hover:bg-red-100 mb-6 border-none rounded-full px-4 py-1">
+            <div className="md:w-1/2 p-10 md:p-14 flex flex-col justify-center">
+              <Badge className="w-fit bg-red-100 text-red-800 hover:bg-red-100 mb-5 border-none rounded-full px-4 py-1">
                 Subscription
               </Badge>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-6">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-5">
                 Never run out of nappies again.
               </h2>
-              <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                Premium eco-friendly nappies delivered to your door exactly when you need them. Save 15% and skip the late-night store runs.
-              </p>
-              <ul className="space-y-4 mb-10">
+
+              {/* Flashing Save 15% banner */}
+              <motion.div
+                animate={{ scale: [1, 1.03, 1], backgroundColor: ["#16a34a", "#22c55e", "#16a34a"] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                className="rounded-2xl px-6 py-3 mb-6 flex items-center justify-between gap-4 text-white"
+              >
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-widest opacity-90">Subscriber exclusive</p>
+                  <p className="text-3xl font-black leading-tight">SAVE 15%</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs opacity-80 line-through">MRP ₹450/month</p>
+                  <p className="text-2xl font-black">₹383<span className="text-sm font-medium">/month</span></p>
+                </div>
+              </motion.div>
+
+              {/* Monthly savings & consumption breakdown */}
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 text-sm">MRP (monthly box)</span>
+                  <span className="text-slate-400 line-through font-semibold">₹450</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-700 font-semibold text-sm">Your subscription price</span>
+                  <span className="text-green-700 font-bold text-lg">₹383 / month</span>
+                </div>
+                <div className="h-px bg-green-200" />
+                <div className="flex items-center justify-between">
+                  <span className="text-green-800 font-bold text-sm">💰 You save every month</span>
+                  <motion.span
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-green-600 font-black text-xl"
+                  >
+                    ₹67
+                  </motion.span>
+                </div>
+                <div className="bg-white rounded-xl px-4 py-3 text-xs text-slate-600 border border-green-100">
+                  <p className="font-semibold text-slate-700 mb-1">📦 Monthly consumption estimate</p>
+                  <p>~4 nappies/day × 30 days = <strong>~120 nappies</strong> covered per box</p>
+                  <p className="mt-0.5 text-green-700 font-medium">= ₹67 saved automatically each month</p>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-8">
                 {[
                   "100% biodegradable bamboo",
                   "Hypoallergenic & chemical-free",
                   "Flexible delivery schedule",
                   "Cancel anytime",
                 ].map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3 text-slate-700">
-                    <div className="h-6 w-6 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <li key={i} className="flex items-center gap-3 text-slate-700 text-sm">
+                    <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                       <Star className="h-3 w-3 text-red-600 fill-current" />
                     </div>
                     {feature}
                   </li>
                 ))}
               </ul>
+
               <Button
                 size="lg"
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-14 text-lg w-full sm:w-auto"
                 onClick={handleSubscribe}
                 data-testid="button-subscribe-nappies"
               >
-                Subscribe Now
+                Subscribe Now — Save ₹67 Every Month
               </Button>
             </div>
           </div>
