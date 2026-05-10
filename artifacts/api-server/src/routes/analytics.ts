@@ -38,9 +38,10 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
     totalVisitors > 0
       ? parseFloat((bannerClicks / totalVisitors).toFixed(3))
       : 0;
+  const conversions = purchases + subscriptions;
   const conversionRate =
     totalVisitors > 0
-      ? parseFloat((purchases / totalVisitors).toFixed(3))
+      ? parseFloat((conversions / totalVisitors).toFixed(3))
       : 0;
   const cartAbandonRate =
     addToCart > 0
@@ -267,7 +268,7 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const addToWishlist = sessionSet(["add_to_wishlist"]);
   const addToCart   = sessionSet(["add_to_cart", "wishlist_to_cart"]);
   const checkouts   = sessionSet(["checkout_start"]);
-  const purchases   = sessionSet(["purchase"]);
+  const purchases   = sessionSet(["purchase", "subscribed"]);
 
   const stages = [
     {
@@ -313,7 +314,7 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
       dropOffRate: 0,
     },
     {
-      stage: "Purchase",
+      stage: "Converted",
       users: purchases,
       dropOff: 0,
       dropOffRate: 0,
