@@ -319,15 +319,15 @@ export default function LandingPage() {
                         {product.onSale && product.salePrice ? (
                           <>
                             <span className="font-bold text-xl text-red-600">
-                              ₹{Number(product.salePrice).toFixed(2)}
+                              ₹{Math.round(Number(product.salePrice))}
                             </span>
                             <span className="text-slate-400 line-through text-sm">
-                              ₹{Number(product.price).toFixed(2)}
+                              ₹{Math.round(Number(product.price))}
                             </span>
                           </>
                         ) : (
                           <span className="font-bold text-xl text-slate-900">
-                            ₹{Number(product.price).toFixed(2)}
+                            ₹{Math.round(Number(product.price))}
                           </span>
                         )}
                       </div>
@@ -511,10 +511,10 @@ export default function LandingPage() {
                 {detailProduct.onSale && detailProduct.salePrice ? (
                   <>
                     <span className="text-2xl font-bold text-red-600">
-                      ₹{Number(detailProduct.salePrice).toFixed(2)}
+                      ₹{Math.round(Number(detailProduct.salePrice))}
                     </span>
                     <span className="text-slate-400 line-through text-sm">
-                      ₹{Number(detailProduct.price).toFixed(2)}
+                      ₹{Math.round(Number(detailProduct.price))}
                     </span>
                     <Badge className="bg-red-100 text-red-700 border-none rounded-full text-xs">
                       {Math.round((1 - Number(detailProduct.salePrice) / Number(detailProduct.price)) * 100)}% off
@@ -522,7 +522,7 @@ export default function LandingPage() {
                   </>
                 ) : (
                   <span className="text-2xl font-bold text-slate-900">
-                    ₹{Number(detailProduct.price).toFixed(2)}
+                    ₹{Math.round(Number(detailProduct.price))}
                   </span>
                 )}
               </div>

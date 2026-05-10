@@ -178,9 +178,9 @@ export default function CartPage() {
                       <p className="text-xs text-slate-400 uppercase tracking-wide font-medium mb-1">{item.category}</p>
                       <h3 className="font-semibold text-slate-900 leading-tight mb-2">{item.name}</h3>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-red-600">₹{displayPrice.toFixed(2)}</span>
+                        <span className="font-bold text-red-600">₹{Math.round(displayPrice)}</span>
                         {item.onSale && item.salePrice != null && (
-                          <span className="text-slate-400 line-through text-sm">₹{item.price.toFixed(2)}</span>
+                          <span className="text-slate-400 line-through text-sm">₹{Math.round(item.price)}</span>
                         )}
                         {item.onSale && (
                           <Badge className="bg-red-100 text-red-700 border-none text-xs rounded-full px-2 py-0">
@@ -210,7 +210,7 @@ export default function CartPage() {
                       </div>
 
                       <span className="text-sm font-bold text-slate-900 min-w-[64px] text-right">
-                        ₹{(displayPrice * item.quantity).toFixed(2)}
+                        ₹{Math.round(displayPrice * item.quantity)}
                       </span>
 
                       <button
@@ -233,12 +233,12 @@ export default function CartPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600">Subtotal ({totalItems} item{totalItems !== 1 ? "s" : ""})</span>
-                    <span className="font-medium text-slate-900">₹{(subtotal + savings).toFixed(2)}</span>
+                    <span className="font-medium text-slate-900">₹{Math.round(subtotal + savings)}</span>
                   </div>
                   {savings > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-green-700">Sale savings</span>
-                      <span className="font-medium text-green-700">−₹{savings.toFixed(2)}</span>
+                      <span className="font-medium text-green-700">−₹{Math.round(savings)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
@@ -251,13 +251,13 @@ export default function CartPage() {
 
                 <div className="flex justify-between mb-8">
                   <span className="font-bold text-slate-900">Total</span>
-                  <span className="text-2xl font-bold text-red-600">₹{subtotal.toFixed(2)}</span>
+                  <span className="text-2xl font-bold text-red-600">₹{Math.round(subtotal)}</span>
                 </div>
 
                 {savings > 0 && (
                   <div className="bg-green-50 border border-green-100 rounded-xl p-3 mb-6 text-center">
                     <p className="text-green-700 text-sm font-medium">
-                      You're saving ₹{savings.toFixed(2)} on this order!
+                      You're saving ₹{Math.round(savings)} on this order!
                     </p>
                   </div>
                 )}
@@ -302,7 +302,7 @@ export default function CartPage() {
                     {item.name} <span className="text-slate-400">× {item.quantity}</span>
                   </span>
                   <span className="font-semibold text-slate-900 flex-shrink-0">
-                    ₹{(displayPrice * item.quantity).toFixed(2)}
+                    ₹{Math.round(displayPrice * item.quantity)}
                   </span>
                 </div>
               );
@@ -313,7 +313,7 @@ export default function CartPage() {
 
           <div className="flex justify-between items-center py-3">
             <span className="font-bold text-slate-900">Total</span>
-            <span className="text-xl font-bold text-red-600">₹{subtotal.toFixed(2)}</span>
+            <span className="text-xl font-bold text-red-600">₹{Math.round(subtotal)}</span>
           </div>
 
           <div className="flex gap-3 pt-2">

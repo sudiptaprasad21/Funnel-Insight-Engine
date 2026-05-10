@@ -230,9 +230,9 @@ export default function WishlistPage() {
                     <h3 className="font-semibold text-slate-900 leading-tight mb-3">{item.name}</h3>
 
                     <div className="flex items-center gap-2 mb-5">
-                      <span className="font-bold text-red-600">₹{displayPrice.toFixed(2)}</span>
+                      <span className="font-bold text-red-600">₹{Math.round(displayPrice)}</span>
                       {item.onSale && item.salePrice != null && (
-                        <span className="text-slate-400 line-through text-sm">₹{item.price.toFixed(2)}</span>
+                        <span className="text-slate-400 line-through text-sm">₹{Math.round(item.price)}</span>
                       )}
                     </div>
 
