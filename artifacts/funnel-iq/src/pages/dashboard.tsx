@@ -139,7 +139,8 @@ export default function DashboardPage() {
                     {[
                       { label: "Product Views", value: summary.productViews, icon: <Users className="h-4 w-4 text-blue-400" /> },
                       { label: "Detail Views", value: summary.productDetailViews, icon: <MousePointerClick className="h-4 w-4 text-sky-500" /> },
-                      { label: "Subscriptions", value: summary.nappySubscriptions, icon: <RefreshCw className="h-4 w-4 text-green-500" /> },
+                      { label: "Sub Intents", value: summary.intendedSubscriptions, icon: <RefreshCw className="h-4 w-4 text-amber-500" /> },
+                      { label: "Subscribed", value: summary.subscriptions, icon: <RefreshCw className="h-4 w-4 text-green-500" /> },
                       { label: "Banner Clicks", value: summary.bannerClicks, icon: <MousePointerClick className="h-4 w-4 text-red-400" /> },
                       { label: "Wishlist Adds", value: summary.addToWishlist, icon: <Heart className="h-4 w-4 text-pink-400" /> },
                       { label: "Wishlist → Cart", value: summary.wishlistToCart, icon: <ShoppingCart className="h-4 w-4 text-indigo-400" /> },

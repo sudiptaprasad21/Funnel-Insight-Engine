@@ -34,6 +34,8 @@ export const TrackEventBody = zod.object({
     "subscription_start",
     "subscription_cancel",
     "nappy_subscription_click",
+    "intended_subscription",
+    "subscribed",
     "product_detail_view",
   ]),
   sessionId: zod.string(),
@@ -86,6 +88,8 @@ export const GetFunnelSummaryResponse = zod.object({
   repeatCustomerRate: zod.number(),
   productDetailViews: zod.number().optional(),
   nappySubscriptions: zod.number().optional(),
+  intendedSubscriptions: zod.number().optional(),
+  subscriptions: zod.number().optional(),
 });
 
 /**
@@ -98,6 +102,8 @@ export const GetCampaignMetricsResponse = zod.object({
   discountItemPurchases: zod.number(),
   browseOnlyVisitors: zod.number(),
   nappySubscriptions: zod.number(),
+  intendedSubscriptions: zod.number(),
+  subscriptions: zod.number(),
   totalRevenue: zod.number(),
   revenueByDay: zod
     .array(

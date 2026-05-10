@@ -28,6 +28,8 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
   const wishlistToCart = countByType("wishlist_to_cart");
   const productDetailViews = countByType("product_detail_view");
   const nappySubscriptions = countByType("nappy_subscription_click");
+  const intendedSubscriptions = countByType("intended_subscription");
+  const subscriptions = countByType("subscribed");
   const cartAbandons = countByType("cart_abandon");
   const checkoutStarts = countByType("checkout_start");
   const purchases = countByType("purchase");
@@ -65,6 +67,8 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
     wishlistToCart,
     productDetailViews,
     nappySubscriptions,
+    intendedSubscriptions,
+    subscriptions,
     cartAbandons,
     checkoutStarts,
     purchases,
@@ -93,6 +97,12 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
   const nappySubscriptions = events.filter(
     (e) => e.eventType === "nappy_subscription_click",
   ).length;
+  const intendedSubscriptions = events.filter(
+    (e) => e.eventType === "intended_subscription",
+  ).length;
+  const subscriptions = events.filter(
+    (e) => e.eventType === "subscribed",
+  ).length;
 
   // Simulate revenue with seeded data pattern — each purchase worth ~₹45
   const totalRevenue = parseFloat((discountItemPurchases * 45.5).toFixed(2));
@@ -120,6 +130,8 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
     discountItemPurchases,
     browseOnlyVisitors,
     nappySubscriptions,
+    intendedSubscriptions,
+    subscriptions,
     totalRevenue,
     revenueByDay,
   });

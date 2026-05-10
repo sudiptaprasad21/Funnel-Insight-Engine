@@ -380,6 +380,8 @@ components:
             - subscription_start
             - subscription_cancel
             - nappy_subscription_click
+            - intended_subscription
+            - subscribed
             - product_detail_view
         sessionId:   { type: string }
         customerId:  { type: ["integer", "null"] }
@@ -409,13 +411,15 @@ components:
         conversionRate:       { type: number }
         cartAbandonRate:      { type: number }
         repeatCustomerRate:   { type: number }
-        productDetailViews:   { type: integer }
-        nappySubscriptions:   { type: integer }
+        productDetailViews:     { type: integer }
+        nappySubscriptions:     { type: integer }
+        intendedSubscriptions:  { type: integer }
+        subscriptions:          { type: integer }
 
     CampaignMetrics:
       type: object
       required: [campaignName, bannerClicks, discountItemViews, discountItemPurchases,
-                 browseOnlyVisitors, nappySubscriptions, totalRevenue]
+                 browseOnlyVisitors, nappySubscriptions, intendedSubscriptions, subscriptions, totalRevenue]
       properties:
         campaignName:           { type: string }
         bannerClicks:           { type: integer }
@@ -423,6 +427,8 @@ components:
         discountItemPurchases:  { type: integer }
         browseOnlyVisitors:     { type: integer }
         nappySubscriptions:     { type: integer }
+        intendedSubscriptions:  { type: integer }
+        subscriptions:          { type: integer }
         totalRevenue:           { type: number }
         revenueByDay:
           type: array

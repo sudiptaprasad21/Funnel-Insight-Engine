@@ -162,7 +162,7 @@ export default function LandingPage() {
         body: JSON.stringify({ isSubscribed: true, subscriptionPlan: "nappy-monthly" }),
       });
     }
-    trackFunnelEvent("nappy_subscription_click", undefined, undefined);
+    trackFunnelEvent("subscribed");
     toast({ title: "Subscription started!", description: "You'll receive your first delivery within 3–5 days." });
   };
 
@@ -475,7 +475,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-14 text-lg w-full sm:w-auto"
-                onClick={() => setShowSubConfirm(true)}
+                onClick={() => { trackFunnelEvent("intended_subscription"); setShowSubConfirm(true); }}
                 data-testid="button-subscribe-nappies"
               >
                 Subscribe Now — Save ₹7,020 Every Year

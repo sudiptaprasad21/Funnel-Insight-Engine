@@ -14,6 +14,8 @@ export interface CampaignMetrics {
   discountItemPurchases: number;
   browseOnlyVisitors: number;
   nappySubscriptions: number;
+  intendedSubscriptions: number;
+  subscriptions: number;
   totalRevenue: number;
   revenueByDay?: DailyRevenue[];
 }

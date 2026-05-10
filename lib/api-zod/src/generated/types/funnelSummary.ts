@@ -25,4 +25,6 @@ export interface FunnelSummary {
   repeatCustomerRate: number;
   productDetailViews?: number;
   nappySubscriptions?: number;
+  intendedSubscriptions?: number;
+  subscriptions?: number;
 }
