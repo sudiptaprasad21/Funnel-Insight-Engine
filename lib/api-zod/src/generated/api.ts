@@ -34,6 +34,7 @@ export const TrackEventBody = zod.object({
     "subscription_start",
     "subscription_cancel",
     "nappy_subscription_click",
+    "product_detail_view",
   ]),
   sessionId: zod.string(),
   customerId: zod.number().nullish(),
@@ -83,6 +84,7 @@ export const GetFunnelSummaryResponse = zod.object({
   conversionRate: zod.number(),
   cartAbandonRate: zod.number().optional(),
   repeatCustomerRate: zod.number(),
+  productDetailViews: zod.number().optional(),
 });
 
 /**
@@ -169,23 +171,6 @@ export const GetDropOffAnalysisResponse = zod.object({
       percentage: zod.number(),
     }),
   ),
-});
-
-/**
- * @summary Customer mood/sentiment breakdown from ratings and reviews
- */
-export const GetMoodAnalysisResponse = zod.object({
-  averageRating: zod.number(),
-  totalReviews: zod.number(),
-  ratingDistribution: zod.array(
-    zod.object({
-      stars: zod.number(),
-      count: zod.number(),
-    }),
-  ),
-  sentimentScore: zod.number(),
-  topPositiveThemes: zod.array(zod.string()),
-  topNegativeThemes: zod.array(zod.string()),
 });
 
 /**
@@ -303,41 +288,6 @@ export const GetProductResponse = zod.object({
   description: zod.string().nullish(),
   isNappySub: zod.boolean().optional(),
   createdAt: zod.coerce.date(),
-});
-
-/**
- * @summary List customer reviews and ratings
- */
-export const listReviewsQueryLimitDefault = 50;
-
-export const ListReviewsQueryParams = zod.object({
-  productId: zod.coerce.number().optional(),
-  minRating: zod.coerce.number().optional(),
-  limit: zod.coerce.number().default(listReviewsQueryLimitDefault),
-});
-
-export const ListReviewsResponseItem = zod.object({
-  id: zod.number(),
-  customerId: zod.number(),
-  productId: zod.number(),
-  rating: zod.number(),
-  title: zod.string().nullish(),
-  body: zod.string().nullish(),
-  sentiment: zod.string().nullish(),
-  createdAt: zod.coerce.date(),
-});
-export const ListReviewsResponse = zod.array(ListReviewsResponseItem);
-
-/**
- * @summary Submit a customer review
- */
-export const CreateReviewBody = zod.object({
-  customerId: zod.number(),
-  productId: zod.number(),
-  rating: zod.number(),
-  title: zod.string().nullish(),
-  body: zod.string().nullish(),
-  sentiment: zod.string().nullish(),
 });
 
 /**

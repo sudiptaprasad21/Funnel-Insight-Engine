@@ -25,4 +25,5 @@ export const EventInputEventType = {
   subscription_start: "subscription_start",
   subscription_cancel: "subscription_cancel",
   nappy_subscription_click: "nappy_subscription_click",
+  product_detail_view: "product_detail_view",
 } as const;

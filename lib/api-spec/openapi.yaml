@@ -355,6 +355,7 @@ components:
             - subscription_start
             - subscription_cancel
             - nappy_subscription_click
+            - product_detail_view
         sessionId:   { type: string }
         customerId:  { type: ["integer", "null"] }
         productId:   { type: ["integer", "null"] }
@@ -383,6 +384,7 @@ components:
         conversionRate:       { type: number }
         cartAbandonRate:      { type: number }
         repeatCustomerRate:   { type: number }
+        productDetailViews:   { type: integer }
 
     CampaignMetrics:
       type: object

@@ -26,6 +26,7 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
   const addToWishlist = events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata !== '{"action":"remove"}').length;
   const removeFromWishlist = countByType("remove_from_wishlist") + events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata === '{"action":"remove"}').length;
   const wishlistToCart = countByType("wishlist_to_cart");
+  const productDetailViews = countByType("product_detail_view");
   const cartAbandons = countByType("cart_abandon");
   const checkoutStarts = countByType("checkout_start");
   const purchases = countByType("purchase");
@@ -61,6 +62,7 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
     addToWishlist,
     removeFromWishlist,
     wishlistToCart,
+    productDetailViews,
     cartAbandons,
     checkoutStarts,
     purchases,
@@ -234,6 +236,7 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const pageViews   = new Set(events.map((e) => e.sessionId)).size;
   const bannerClicks = sessionSet(["banner_click"]);
   const productViews = sessionSet(["product_view", "sale_item_view", "browse_only"]);
+  const productDetailViews = sessionSet(["product_detail_view"]);
   const addToWishlist = sessionSet(["add_to_wishlist"]);
   const addToCart   = sessionSet(["add_to_cart", "wishlist_to_cart"]);
   const checkouts   = sessionSet(["checkout_start"]);
@@ -255,6 +258,12 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
     {
       stage: "Product View",
       users: productViews,
+      dropOff: 0,
+      dropOffRate: 0,
+    },
+    {
+      stage: "Product Detail View",
+      users: productDetailViews,
       dropOff: 0,
       dropOffRate: 0,
     },

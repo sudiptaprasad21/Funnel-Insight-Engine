@@ -14,6 +14,7 @@ import bambooNappiesImg from "@/assets/images/bamboo-nappies.png";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, ShoppingCart, Star } from "lucide-react";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
@@ -40,6 +41,7 @@ export default function LandingPage() {
   const [cartCount, setCartCount] = useState(() => getCartCount());
   const [wishlistIds, setWishlistIds] = useState<Set<number>>(() => getWishlistIds());
   const [cartFlash, setCartFlash] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<NonNullable<typeof products>[number] | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -87,6 +89,12 @@ export default function LandingPage() {
 
   const handleProductView = (productId: number, isSale: boolean) => {
     trackFunnelEvent(isSale ? "sale_item_view" : "browse_only", undefined, productId);
+  };
+
+  const handleOpenDetail = (product: NonNullable<typeof products>[number]) => {
+    setDetailProduct(product);
+    handleProductView(product.id, product.onSale);
+    trackFunnelEvent("product_detail_view", undefined, product.id);
   };
 
   const handleAddToCart = (
@@ -277,7 +285,7 @@ export default function LandingPage() {
                   <Card
                     key={product.id}
                     className="group overflow-hidden border-none shadow-sm hover:shadow-md transition-all bg-white rounded-2xl cursor-pointer"
-                    onClick={() => handleProductView(product.id, product.onSale)}
+                    onClick={() => handleOpenDetail(product)}
                     data-testid={`card-product-${product.id}`}
                   >
                     <div className="aspect-square relative overflow-hidden bg-slate-50">
@@ -415,6 +423,105 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Product Detail Sheet */}
+      <Sheet open={detailProduct !== null} onOpenChange={(open) => !open && setDetailProduct(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          {detailProduct && (
+            <div className="flex flex-col h-full">
+              <SheetHeader className="mb-6">
+                <div className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">
+                  {detailProduct.category}
+                </div>
+                <SheetTitle className="font-serif text-2xl text-slate-900 leading-tight">
+                  {detailProduct.name}
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="aspect-square bg-slate-50 rounded-2xl overflow-hidden mb-6 relative">
+                {detailProduct.onSale && (
+                  <Badge className="absolute top-4 left-4 z-10 bg-red-500 text-white border-none rounded-full px-3 py-1">
+                    Sale
+                  </Badge>
+                )}
+                <img
+                  src={PRODUCT_IMAGES[detailProduct.id] ?? FALLBACK_IMAGE}
+                  alt={detailProduct.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {detailProduct.description && (
+                <p className="text-slate-600 leading-relaxed mb-6 text-sm">{detailProduct.description}</p>
+              )}
+
+              <div className="flex items-center gap-3 mb-8">
+                {detailProduct.onSale && detailProduct.salePrice ? (
+                  <>
+                    <span className="text-2xl font-bold text-red-600">
+                      ₹{Number(detailProduct.salePrice).toFixed(2)}
+                    </span>
+                    <span className="text-slate-400 line-through text-sm">
+                      ₹{Number(detailProduct.price).toFixed(2)}
+                    </span>
+                    <Badge className="bg-red-100 text-red-700 border-none rounded-full text-xs">
+                      {Math.round((1 - Number(detailProduct.salePrice) / Number(detailProduct.price)) * 100)}% off
+                    </Badge>
+                  </>
+                ) : (
+                  <span className="text-2xl font-bold text-slate-900">
+                    ₹{Number(detailProduct.price).toFixed(2)}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-auto">
+                <Button
+                  className="flex-1 bg-slate-900 text-white hover:bg-slate-800 rounded-xl h-12"
+                  onClick={() => {
+                    handleAddToCart(
+                      detailProduct.id,
+                      detailProduct.name,
+                      Number(detailProduct.price),
+                      detailProduct.salePrice != null ? Number(detailProduct.salePrice) : null,
+                      detailProduct.onSale,
+                      detailProduct.category,
+                    );
+                    setDetailProduct(null);
+                  }}
+                >
+                  Add to Cart
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={`rounded-xl h-12 w-12 border-slate-200 transition-colors ${
+                    wishlistIds.has(detailProduct.id)
+                      ? "bg-red-50 border-red-200 text-red-500"
+                      : "text-slate-600 hover:border-red-200 hover:text-red-500"
+                  }`}
+                  onClick={() =>
+                    handleAddToWishlist(
+                      detailProduct.id,
+                      detailProduct.name,
+                      Number(detailProduct.price),
+                      detailProduct.salePrice != null ? Number(detailProduct.salePrice) : null,
+                      detailProduct.onSale,
+                      detailProduct.category,
+                    )
+                  }
+                >
+                  {wishlistIds.has(detailProduct.id) ? (
+                    <Heart className="h-5 w-5 fill-current" />
+                  ) : (
+                    <Heart className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 py-16 text-center">

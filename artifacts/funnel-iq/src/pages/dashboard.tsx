@@ -138,6 +138,7 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { label: "Product Views", value: summary.productViews, icon: <Users className="h-4 w-4 text-blue-400" /> },
+                      { label: "Detail Views", value: summary.productDetailViews, icon: <MousePointerClick className="h-4 w-4 text-sky-500" /> },
                       { label: "Banner Clicks", value: summary.bannerClicks, icon: <MousePointerClick className="h-4 w-4 text-red-400" /> },
                       { label: "Wishlist Adds", value: summary.addToWishlist, icon: <Heart className="h-4 w-4 text-pink-400" /> },
                       { label: "Wishlist → Cart", value: summary.wishlistToCart, icon: <ShoppingCart className="h-4 w-4 text-indigo-400" /> },
