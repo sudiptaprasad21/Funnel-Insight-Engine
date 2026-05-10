@@ -426,18 +426,11 @@ export default function LandingPage() {
 
               {/* Flashing Save 15% banner */}
               <motion.div
-                animate={{ scale: [1, 1.03, 1], backgroundColor: ["#16a34a", "#22c55e", "#16a34a"] }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                className="rounded-2xl px-6 py-3 mb-6 flex items-center justify-between gap-4 text-white"
+                animate={{ scale: [1, 1.06, 1], backgroundColor: ["#16a34a", "#22c55e", "#16a34a"] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                className="rounded-2xl px-8 py-4 mb-6 flex items-center justify-center text-white"
               >
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-widest opacity-90">Subscriber exclusive</p>
-                  <p className="text-3xl font-black leading-tight">SAVE 15%</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs opacity-80 line-through">MRP ₹3,900/month</p>
-                  <p className="text-2xl font-black">₹3,315<span className="text-sm font-medium">/month</span></p>
-                </div>
+                <p className="text-4xl font-black tracking-tight">SAVE 15%</p>
               </motion.div>
 
               {/* Monthly savings & consumption breakdown */}
