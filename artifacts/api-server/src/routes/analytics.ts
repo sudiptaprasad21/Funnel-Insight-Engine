@@ -288,9 +288,10 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   for (let i = 0; i < stages.length - 1; i++) {
     const dropOff = stages[i].users - stages[i + 1].users;
     stages[i].dropOff = dropOff;
-    stages[i].dropOffRate = parseFloat(
-      ((dropOff / stages[i].users) * 100).toFixed(1),
-    );
+    stages[i].dropOffRate =
+      stages[i].users > 0
+        ? parseFloat(((dropOff / stages[i].users) * 100).toFixed(1))
+        : 0;
   }
 
   const topDropOffStage =

@@ -108,7 +108,7 @@ export default function DashboardPage() {
                         </div>
                         {i < dropOff.stages.length - 1 && (
                           <div className="text-xs text-destructive text-right">
-                            {stage.dropOffRate.toFixed(1)}% drop-off
+                            {(stage.dropOffRate ?? 0).toFixed(1)}% drop-off
                           </div>
                         )}
                       </div>
