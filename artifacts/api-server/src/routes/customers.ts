@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { customersTable } from "@workspace/db";
 import {
   CreateCustomerBody,
+  UpdateCustomerBody,
   GetCustomerParams,
   ListCustomersQueryParams,
   ListCustomersResponse,
@@ -53,6 +54,33 @@ router.post("/customers", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(GetCustomerResponse.parse(customer));
+});
+
+router.patch("/customers/:id", async (req, res): Promise<void> => {
+  const params = GetCustomerParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const body = UpdateCustomerBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [customer] = await db
+    .update(customersTable)
+    .set(body.data)
+    .where(eq(customersTable.id, params.data.id))
+    .returning();
+
+  if (!customer) {
+    res.status(404).json({ error: "Customer not found" });
+    return;
+  }
+
+  res.json(GetCustomerResponse.parse(customer));
 });
 
 router.get("/customers/:id", async (req, res): Promise<void> => {

@@ -24,4 +24,5 @@ export interface FunnelSummary {
   cartAbandonRate?: number;
   repeatCustomerRate: number;
   productDetailViews?: number;
+  nappySubscriptions?: number;
 }

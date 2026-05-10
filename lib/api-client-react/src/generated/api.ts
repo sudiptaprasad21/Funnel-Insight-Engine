@@ -35,6 +35,7 @@ import type {
   Product,
   ProductInput,
   TrafficData,
+  UpdateCustomerBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -942,6 +943,93 @@ export function useGetCustomer<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update a customer (e.g. set subscription status)
+ */
+export const getUpdateCustomerUrl = (id: number) => {
+  return `/api/customers/${id}`;
+};
+
+export const updateCustomer = async (
+  id: number,
+  updateCustomerBody: UpdateCustomerBody,
+  options?: RequestInit,
+): Promise<Customer> => {
+  return customFetch<Customer>(getUpdateCustomerUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateCustomerBody),
+  });
+};
+
+export const getUpdateCustomerMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCustomer>>,
+    TError,
+    { id: number; data: BodyType<UpdateCustomerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateCustomer>>,
+  TError,
+  { id: number; data: BodyType<UpdateCustomerBody> },
+  TContext
+> => {
+  const mutationKey = ["updateCustomer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateCustomer>>,
+    { id: number; data: BodyType<UpdateCustomerBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateCustomer(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCustomerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateCustomer>>
+>;
+export type UpdateCustomerMutationBody = BodyType<UpdateCustomerBody>;
+export type UpdateCustomerMutationError = ErrorType<void>;
+
+/**
+ * @summary Update a customer (e.g. set subscription status)
+ */
+export const useUpdateCustomer = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCustomer>>,
+    TError,
+    { id: number; data: BodyType<UpdateCustomerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateCustomer>>,
+  TError,
+  { id: number; data: BodyType<UpdateCustomerBody> },
+  TContext
+> => {
+  return useMutation(getUpdateCustomerMutationOptions(options));
+};
 
 /**
  * @summary List products, optionally filtering by campaign/discount

@@ -27,6 +27,7 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
   const removeFromWishlist = countByType("remove_from_wishlist") + events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata === '{"action":"remove"}').length;
   const wishlistToCart = countByType("wishlist_to_cart");
   const productDetailViews = countByType("product_detail_view");
+  const nappySubscriptions = countByType("nappy_subscription_click");
   const cartAbandons = countByType("cart_abandon");
   const checkoutStarts = countByType("checkout_start");
   const purchases = countByType("purchase");
@@ -63,6 +64,7 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
     removeFromWishlist,
     wishlistToCart,
     productDetailViews,
+    nappySubscriptions,
     cartAbandons,
     checkoutStarts,
     purchases,

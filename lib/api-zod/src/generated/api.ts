@@ -85,6 +85,7 @@ export const GetFunnelSummaryResponse = zod.object({
   cartAbandonRate: zod.number().optional(),
   repeatCustomerRate: zod.number(),
   productDetailViews: zod.number().optional(),
+  nappySubscriptions: zod.number().optional(),
 });
 
 /**
@@ -221,6 +222,36 @@ export const GetCustomerParams = zod.object({
 });
 
 export const GetCustomerResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  isRepeat: zod.boolean(),
+  isSubscribed: zod.boolean(),
+  subscriptionDays: zod.number().nullish(),
+  subscriptionPlan: zod.string().nullish(),
+  totalOrders: zod.number().optional(),
+  totalSpend: zod.number().optional(),
+  source: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update a customer (e.g. set subscription status)
+ */
+export const UpdateCustomerParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateCustomerBody = zod.object({
+  isSubscribed: zod.boolean().optional(),
+  subscriptionDays: zod.number().nullish(),
+  subscriptionPlan: zod.string().nullish(),
+  isRepeat: zod.boolean().optional(),
+  totalOrders: zod.number().optional(),
+  totalSpend: zod.number().optional(),
+});
+
+export const UpdateCustomerResponse = zod.object({
   id: zod.number(),
   name: zod.string(),
   email: zod.string(),

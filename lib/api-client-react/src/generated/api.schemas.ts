@@ -73,6 +73,7 @@ export interface FunnelSummary {
   cartAbandonRate?: number;
   repeatCustomerRate: number;
   productDetailViews?: number;
+  nappySubscriptions?: number;
 }
 
 export interface DailyRevenue {
@@ -172,6 +173,17 @@ export interface CustomerInput {
   totalSpend?: number;
   /** @nullable */
   source?: string | null;
+}
+
+export interface UpdateCustomerBody {
+  isSubscribed?: boolean;
+  /** @nullable */
+  subscriptionDays?: number | null;
+  /** @nullable */
+  subscriptionPlan?: string | null;
+  isRepeat?: boolean;
+  totalOrders?: number;
+  totalSpend?: number;
 }
 
 export interface Product {

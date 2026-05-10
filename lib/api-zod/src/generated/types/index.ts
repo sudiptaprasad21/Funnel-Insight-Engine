@@ -35,3 +35,4 @@ export * from "./product";
 export * from "./productInput";
 export * from "./trafficData";
 export * from "./trafficPoint";
+export * from "./updateCustomerBody";

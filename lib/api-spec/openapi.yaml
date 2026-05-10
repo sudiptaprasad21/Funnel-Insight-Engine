@@ -212,6 +212,31 @@ paths:
                 $ref: "#/components/schemas/Customer"
         "404":
           description: Not found
+    patch:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update a customer (e.g. set subscription status)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCustomerBody"
+      responses:
+        "200":
+          description: Updated customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+        "404":
+          description: Not found
 
   # ─── Products ────────────────────────────────────────────────────────────────
   /products:
@@ -385,6 +410,7 @@ components:
         cartAbandonRate:      { type: number }
         repeatCustomerRate:   { type: number }
         productDetailViews:   { type: integer }
+        nappySubscriptions:   { type: integer }
 
     CampaignMetrics:
       type: object
@@ -522,6 +548,16 @@ components:
         totalOrders:      { type: integer }
         totalSpend:       { type: number }
         source:           { type: ["string", "null"] }
+
+    UpdateCustomerBody:
+      type: object
+      properties:
+        isSubscribed:     { type: boolean }
+        subscriptionDays: { type: ["integer", "null"] }
+        subscriptionPlan: { type: ["string", "null"] }
+        isRepeat:         { type: boolean }
+        totalOrders:      { type: integer }
+        totalSpend:       { type: number }
 
     # ─── Products ────────────────────────────────────────────────────────────
     Product:

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trackFunnelEvent } from "@/lib/tracking";
-import { getStoredCustomerName, clearCustomer, isLoggedIn } from "@/lib/auth";
+import { getStoredCustomerName, getStoredCustomerId, clearCustomer, isLoggedIn } from "@/lib/auth";
 import {
   addToCart,
   addToWishlist,
@@ -141,8 +141,16 @@ export default function LandingPage() {
     });
   };
 
-  const handleSubscribe = () => {
-    trackFunnelEvent("nappy_subscription_click");
+  const handleSubscribe = async () => {
+    const customerId = getStoredCustomerId();
+    if (customerId) {
+      await fetch(`/api/customers/${customerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isSubscribed: true, subscriptionPlan: "nappy-monthly" }),
+      });
+    }
+    trackFunnelEvent("nappy_subscription_click", undefined, undefined);
     toast({ title: "Subscription started!", description: "You'll receive your first delivery within 3–5 days." });
   };
 
