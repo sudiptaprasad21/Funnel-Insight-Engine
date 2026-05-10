@@ -431,19 +431,19 @@ export default function LandingPage() {
                 </div>
                 <div className="h-px bg-green-200" />
                 <div className="flex items-center justify-between">
-                  <span className="text-green-800 font-bold text-sm">💰 You save every month</span>
+                  <span className="text-green-800 font-bold text-sm">💰 You save every year</span>
                   <motion.span
                     animate={{ scale: [1, 1.15, 1] }}
                     transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
-                    className="text-green-600 font-black text-xl"
+                    className="text-green-600 font-black text-2xl"
                   >
-                    ₹67
+                    ₹804
                   </motion.span>
                 </div>
                 <div className="bg-white rounded-xl px-4 py-3 text-xs text-slate-600 border border-green-100">
                   <p className="font-semibold text-slate-700 mb-1">📦 Monthly consumption estimate</p>
                   <p>~4 nappies/day × 30 days = <strong>~120 nappies</strong> covered per box</p>
-                  <p className="mt-0.5 text-green-700 font-medium">= ₹67 saved automatically each month</p>
+                  <p className="mt-0.5 text-green-700 font-medium">= ₹67/month × 12 months = <strong>₹804 saved per year</strong></p>
                 </div>
               </div>
 
