@@ -4,6 +4,8 @@ import {
   getGetFunnelSummaryQueryKey,
   useGetDropOffAnalysis,
   getGetDropOffAnalysisQueryKey,
+  useGetCustomerTrends,
+  getGetCustomerTrendsQueryKey,
   useDiagnoseFunnel
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -22,6 +24,10 @@ export default function DashboardPage() {
   
   const { data: dropOff, isLoading: dropOffLoading } = useGetDropOffAnalysis({
     query: { queryKey: getGetDropOffAnalysisQueryKey() }
+  });
+
+  const { data: customerTrends, isLoading: trendsLoading } = useGetCustomerTrends({
+    query: { queryKey: getGetCustomerTrendsQueryKey() }
   });
 
   const diagnose = useDiagnoseFunnel();
@@ -54,7 +60,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Top Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricCard 
             title="Total Visitors" 
             value={summary?.totalVisitors} 
@@ -78,6 +84,18 @@ export default function DashboardPage() {
             value={summary ? `${(summary.repeatCustomerRate * 100).toFixed(1)}%` : undefined} 
             loading={summaryLoading} 
             icon={<RefreshCw className="h-4 w-4 text-orange-500" />} 
+          />
+          <MetricCard 
+            title="Total Customers" 
+            value={customerTrends?.totalCustomers} 
+            loading={trendsLoading} 
+            icon={<Users className="h-4 w-4 text-indigo-500" />} 
+          />
+          <MetricCard 
+            title="Active Subscribers" 
+            value={customerTrends?.activeSubscriptions} 
+            loading={trendsLoading} 
+            icon={<Activity className="h-4 w-4 text-emerald-500" />} 
           />
         </div>
 

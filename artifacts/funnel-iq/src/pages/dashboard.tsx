@@ -4,13 +4,15 @@ import {
   getGetFunnelSummaryQueryKey,
   useGetDropOffAnalysis,
   getGetDropOffAnalysisQueryKey,
+  useGetCustomerTrends,
+  getGetCustomerTrendsQueryKey,
   useDiagnoseFunnel
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -22,6 +24,10 @@ export default function DashboardPage() {
 
   const { data: dropOff, isLoading: dropOffLoading } = useGetDropOffAnalysis({
     query: { queryKey: getGetDropOffAnalysisQueryKey() }
+  });
+
+  const { data: customerTrends, isLoading: trendsLoading } = useGetCustomerTrends({
+    query: { queryKey: getGetCustomerTrendsQueryKey() }
   });
 
   const diagnose = useDiagnoseFunnel();
@@ -141,6 +147,8 @@ export default function DashboardPage() {
                       { label: "Detail Views", value: summary.productDetailViews, icon: <MousePointerClick className="h-4 w-4 text-sky-500" /> },
                       { label: "Sub Intents", value: summary.intendedSubscriptions, icon: <RefreshCw className="h-4 w-4 text-amber-500" /> },
                       { label: "Subscribed", value: summary.subscriptions, icon: <RefreshCw className="h-4 w-4 text-green-500" /> },
+                      { label: "Total Customers", value: customerTrends?.totalCustomers, icon: <Users className="h-4 w-4 text-indigo-400" /> },
+                      { label: "Active Subscribers", value: customerTrends?.activeSubscriptions, icon: <TrendingUp className="h-4 w-4 text-emerald-500" /> },
                       { label: "Banner Clicks", value: summary.bannerClicks, icon: <MousePointerClick className="h-4 w-4 text-red-400" /> },
                       { label: "Wishlist Adds", value: summary.addToWishlist, icon: <Heart className="h-4 w-4 text-pink-400" /> },
                       { label: "Wishlist → Cart", value: summary.wishlistToCart, icon: <ShoppingCart className="h-4 w-4 text-indigo-400" /> },
