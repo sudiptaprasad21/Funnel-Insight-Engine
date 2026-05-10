@@ -158,7 +158,7 @@ export default function CustomersPage() {
                         <td className="py-3 px-4 text-muted-foreground">{customer.source ?? "—"}</td>
                         <td className="py-3 px-4 text-right">{customer.totalOrders ?? 0}</td>
                         <td className="py-3 px-4 text-right">
-                          {customer.totalSpend ? `£${Number(customer.totalSpend).toFixed(2)}` : "£0.00"}
+                          {customer.totalSpend ? `₹${Number(customer.totalSpend).toFixed(2)}` : "₹0.00"}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2 flex-wrap">

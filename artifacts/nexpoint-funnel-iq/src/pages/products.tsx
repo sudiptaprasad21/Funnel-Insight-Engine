@@ -178,21 +178,21 @@ export default function ProductsPage() {
                         {product.onSale && product.salePrice ? (
                           <>
                             <span className="text-xl font-bold text-red-600">
-                              £{Number(product.salePrice).toFixed(2)}
+                              ₹{Number(product.salePrice).toFixed(2)}
                             </span>
                             <span className="text-sm text-muted-foreground line-through">
-                              £{Number(product.price).toFixed(2)}
+                              ₹{Number(product.price).toFixed(2)}
                             </span>
                             <Badge
                               variant="outline"
                               className="ml-auto text-xs bg-red-50 text-red-700 border-red-200"
                             >
-                              Save £{(Number(product.price) - Number(product.salePrice)).toFixed(2)}
+                              Save ₹{(Number(product.price) - Number(product.salePrice)).toFixed(2)}
                             </Badge>
                           </>
                         ) : (
                           <span className="text-xl font-bold">
-                            £{Number(product.price).toFixed(2)}
+                            ₹{Number(product.price).toFixed(2)}
                           </span>
                         )}
                       </div>

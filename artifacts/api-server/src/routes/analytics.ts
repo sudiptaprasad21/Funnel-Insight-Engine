@@ -90,7 +90,7 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
     (e) => e.eventType === "nappy_subscription_click",
   ).length;
 
-  // Simulate revenue with seeded data pattern — each purchase worth ~£45
+  // Simulate revenue with seeded data pattern — each purchase worth ~₹45
   const totalRevenue = parseFloat((discountItemPurchases * 45.5).toFixed(2));
 
   // Generate last 7 days revenue trend

@@ -52,7 +52,7 @@ AI-assisted marketing funnel drop-off diagnosis tool with a trackable Happy Mom 
 
 ## User preferences
 
-- Use GBP (£) for prices on the frontend (products use real prices from the DB).
+- Use INR (₹) for prices on the frontend (products use real prices from the DB).
 - Mother's Day 2026 date: May 10th.
 
 ## Gotchas
