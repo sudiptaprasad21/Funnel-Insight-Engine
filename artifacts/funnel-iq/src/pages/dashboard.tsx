@@ -228,9 +228,9 @@ export default function DashboardPage() {
                         <h4 className="font-semibold text-sm text-primary">Suggested Experiments</h4>
                         {diagnose.data.experiments.map((exp, i) => (
                           <div key={i} className="bg-background p-3 rounded-lg border text-sm space-y-1 shadow-sm">
-                            <p className="font-medium">{exp.name}</p>
+                            <p className="font-medium">{exp.title}</p>
                             <p className="text-muted-foreground text-xs">{exp.hypothesis}</p>
-                            <Badge variant="outline" className="text-xs">{exp.type}</Badge>
+                            <Badge variant="outline" className="text-xs">{exp.effort} effort · {exp.funnelStage}</Badge>
                           </div>
                         ))}
                       </div>

@@ -7,19 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Package, Tag, TrendingDown } from "lucide-react";
-import swaddleImg from "@/assets/images/swaddle.png";
-import pillowImg from "@/assets/images/pillow.png";
-import braImg from "@/assets/images/bra.png";
-import nappiesImg from "@/assets/images/nappies.png";
-
-function getProductImage(name: string, imageUrl?: string | null): string {
-  if (imageUrl) return imageUrl;
-  const lower = name.toLowerCase();
-  if (lower.includes("bra")) return braImg;
-  if (lower.includes("napp")) return nappiesImg;
-  if (lower.includes("pillow") || lower.includes("sleep")) return pillowImg;
-  return swaddleImg;
-}
+import { PRODUCT_IMAGES, FALLBACK_IMAGE } from "@/lib/product-images";
 
 export default function ProductsPage() {
   const { data: products, isLoading } = useListProducts(undefined, {
@@ -145,7 +133,7 @@ export default function ProductsPage() {
                   >
                     <div className="relative aspect-video bg-slate-50 overflow-hidden">
                       <img
-                        src={getProductImage(product.name, product.imageUrl)}
+                        src={PRODUCT_IMAGES[product.id] ?? FALLBACK_IMAGE}
                         alt={product.name}
                         className="object-cover w-full h-full"
                       />
