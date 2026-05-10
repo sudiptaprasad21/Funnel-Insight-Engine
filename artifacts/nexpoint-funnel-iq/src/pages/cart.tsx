@@ -89,7 +89,7 @@ export default function CartPage() {
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
 
   const handlePlaceOrder = () => {
-    trackFunnelEvent("purchase");
+    trackFunnelEvent("purchase", JSON.stringify({ total: subtotal, items: totalItems }));
     clearCart();
     setItems([]);
     setCheckoutOpen(false);

@@ -4,7 +4,6 @@ import {
   funnelEventsTable,
   customersTable,
   productsTable,
-  reviewsTable,
 } from "@workspace/db";
 import { sql, count, avg } from "drizzle-orm";
 
@@ -227,65 +226,59 @@ router.get("/analytics/customer-trends", async (req, res): Promise<void> => {
 router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const events = await db.select().from(funnelEventsTable);
 
-  const sessions = new Set(events.map((e) => e.sessionId)).size;
-  const pageViews = sessions;
-  const bannerClicks = events.filter(
-    (e) => e.eventType === "banner_click",
-  ).length;
-  // Product views = section scroll (product_view) + individual card clicks (sale_item_view + browse_only)
-  const productViews =
-    events.filter((e) => e.eventType === "product_view").length +
-    events.filter((e) => e.eventType === "sale_item_view").length +
-    events.filter((e) => e.eventType === "browse_only").length;
-  const addToWishlist = events.filter((e) => e.eventType === "add_to_wishlist").length;
-  const addToCart =
-    events.filter((e) => e.eventType === "add_to_cart").length +
-    events.filter((e) => e.eventType === "wishlist_to_cart").length;
-  const checkouts = events.filter(
-    (e) => e.eventType === "checkout_start",
-  ).length;
-  const purchases = events.filter((e) => e.eventType === "purchase").length;
+  // Count unique sessions that reached each stage — a session "reaches" a stage
+  // if it fired at least one event of the relevant type(s).
+  const sessionSet = (types: string[]) =>
+    new Set(events.filter((e) => types.includes(e.eventType)).map((e) => e.sessionId)).size;
+
+  const pageViews   = new Set(events.map((e) => e.sessionId)).size;
+  const bannerClicks = sessionSet(["banner_click"]);
+  const productViews = sessionSet(["product_view", "sale_item_view", "browse_only"]);
+  const addToWishlist = sessionSet(["add_to_wishlist"]);
+  const addToCart   = sessionSet(["add_to_cart", "wishlist_to_cart"]);
+  const checkouts   = sessionSet(["checkout_start"]);
+  const purchases   = sessionSet(["purchase"]);
 
   const stages = [
     {
       stage: "Landing Page View",
-      users: Math.max(pageViews, 350),
+      users: pageViews,
       dropOff: 0,
       dropOffRate: 0,
     },
     {
       stage: "Banner Click",
-      users: Math.max(bannerClicks, 210),
+      users: bannerClicks,
       dropOff: 0,
       dropOffRate: 0,
     },
     {
       stage: "Product View",
-      users: Math.max(productViews, 148),
+      users: productViews,
       dropOff: 0,
       dropOffRate: 0,
     },
     {
       stage: "Wishlist Save",
-      users: Math.max(addToWishlist, 95),
+      users: addToWishlist,
       dropOff: 0,
       dropOffRate: 0,
     },
     {
       stage: "Add to Cart",
-      users: Math.max(addToCart, 72),
+      users: addToCart,
       dropOff: 0,
       dropOffRate: 0,
     },
     {
       stage: "Checkout",
-      users: Math.max(checkouts, 38),
+      users: checkouts,
       dropOff: 0,
       dropOffRate: 0,
     },
     {
       stage: "Purchase",
-      users: Math.max(purchases, 19),
+      users: purchases,
       dropOff: 0,
       dropOffRate: 0,
     },
@@ -314,47 +307,6 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   ];
 
   res.json({ stages, topDropOffStage, dropOffReasons });
-});
-
-// ─── Mood Analysis ────────────────────────────────────────────────────────────
-router.get("/analytics/mood", async (req, res): Promise<void> => {
-  const reviews = await db.select().from(reviewsTable);
-
-  const total = reviews.length;
-  const averageRating =
-    total > 0
-      ? parseFloat(
-          (reviews.reduce((s, r) => s + r.rating, 0) / total).toFixed(1),
-        )
-      : 4.3;
-
-  const ratingDistribution = [1, 2, 3, 4, 5].map((stars) => ({
-    stars,
-    count: reviews.filter((r) => r.rating === stars).length,
-  }));
-
-  const positive = reviews.filter((r) => r.sentiment === "positive").length;
-  const sentimentScore =
-    total > 0 ? parseFloat(((positive / total) * 100).toFixed(1)) : 78;
-
-  res.json({
-    averageRating,
-    totalReviews: total,
-    ratingDistribution,
-    sentimentScore,
-    topPositiveThemes: [
-      "Fast delivery",
-      "Great quality products",
-      "Lovely packaging",
-      "Perfect for new mums",
-      "Great value sale prices",
-    ],
-    topNegativeThemes: [
-      "Expensive without discount",
-      "Nappy subscription cancellation difficult",
-      "Checkout too many steps",
-    ],
-  });
 });
 
 export default router;

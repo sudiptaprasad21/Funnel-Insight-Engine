@@ -18,8 +18,6 @@ tags:
     description: Customer data
   - name: products
     description: Product catalogue
-  - name: reviews
-    description: Customer reviews and mood
   - name: ai
     description: AI-generated funnel insights
 
@@ -150,19 +148,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/DropOffAnalysis"
 
-  /analytics/mood:
-    get:
-      operationId: getMoodAnalysis
-      tags: [analytics]
-      summary: Customer mood/sentiment breakdown from ratings and reviews
-      responses:
-        "200":
-          description: Mood analysis
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MoodAnalysis"
-
   # ─── Customers ───────────────────────────────────────────────────────────────
   /customers:
     get:
@@ -290,53 +275,6 @@ paths:
                 $ref: "#/components/schemas/Product"
         "404":
           description: Not found
-
-  # ─── Reviews ─────────────────────────────────────────────────────────────────
-  /reviews:
-    get:
-      operationId: listReviews
-      tags: [reviews]
-      summary: List customer reviews and ratings
-      parameters:
-        - in: query
-          name: productId
-          schema:
-            type: integer
-        - in: query
-          name: minRating
-          schema:
-            type: integer
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 50
-      responses:
-        "200":
-          description: Reviews
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Review"
-    post:
-      operationId: createReview
-      tags: [reviews]
-      summary: Submit a customer review
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ReviewInput"
-      responses:
-        "201":
-          description: Review created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Review"
 
   # ─── AI Insights ─────────────────────────────────────────────────────────────
   /ai/diagnose:
@@ -552,34 +490,6 @@ components:
         count:      { type: integer }
         percentage: { type: number }
 
-    MoodAnalysis:
-      type: object
-      required: [averageRating, totalReviews, ratingDistribution, sentimentScore,
-                 topPositiveThemes, topNegativeThemes]
-      properties:
-        averageRating:      { type: number }
-        totalReviews:       { type: integer }
-        ratingDistribution:
-          type: array
-          items:
-            $ref: "#/components/schemas/RatingCount"
-        sentimentScore:       { type: number }
-        topPositiveThemes:
-          type: array
-          items:
-            { type: string }
-        topNegativeThemes:
-          type: array
-          items:
-            { type: string }
-
-    RatingCount:
-      type: object
-      required: [stars, count]
-      properties:
-        stars: { type: integer }
-        count: { type: integer }
-
     # ─── Customers ───────────────────────────────────────────────────────────
     Customer:
       type: object
@@ -639,31 +549,6 @@ components:
         imageUrl:    { type: ["string", "null"] }
         description: { type: ["string", "null"] }
         isNappySub:  { type: boolean }
-
-    # ─── Reviews ─────────────────────────────────────────────────────────────
-    Review:
-      type: object
-      required: [id, customerId, productId, rating, createdAt]
-      properties:
-        id:         { type: integer }
-        customerId: { type: integer }
-        productId:  { type: integer }
-        rating:     { type: integer }
-        title:      { type: ["string", "null"] }
-        body:       { type: ["string", "null"] }
-        sentiment:  { type: ["string", "null"] }
-        createdAt:  { type: string, format: date-time }
-
-    ReviewInput:
-      type: object
-      required: [customerId, productId, rating]
-      properties:
-        customerId: { type: integer }
-        productId:  { type: integer }
-        rating:     { type: integer }
-        title:      { type: ["string", "null"] }
-        body:       { type: ["string", "null"] }
-        sentiment:  { type: ["string", "null"] }
 
     # ─── AI ──────────────────────────────────────────────────────────────────
     DiagnoseInput:

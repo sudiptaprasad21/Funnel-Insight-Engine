@@ -140,20 +140,6 @@ export interface DropOffAnalysis {
   dropOffReasons: DropOffReason[];
 }
 
-export interface RatingCount {
-  stars: number;
-  count: number;
-}
-
-export interface MoodAnalysis {
-  averageRating: number;
-  totalReviews: number;
-  ratingDistribution: RatingCount[];
-  sentimentScore: number;
-  topPositiveThemes: string[];
-  topNegativeThemes: string[];
-}
-
 export interface Customer {
   id: number;
   name: string;
@@ -214,32 +200,6 @@ export interface ProductInput {
   /** @nullable */
   description?: string | null;
   isNappySub?: boolean;
-}
-
-export interface Review {
-  id: number;
-  customerId: number;
-  productId: number;
-  rating: number;
-  /** @nullable */
-  title?: string | null;
-  /** @nullable */
-  body?: string | null;
-  /** @nullable */
-  sentiment?: string | null;
-  createdAt: string;
-}
-
-export interface ReviewInput {
-  customerId: number;
-  productId: number;
-  rating: number;
-  /** @nullable */
-  title?: string | null;
-  /** @nullable */
-  body?: string | null;
-  /** @nullable */
-  sentiment?: string | null;
 }
 
 export interface DiagnoseInput {
@@ -326,10 +286,4 @@ export const ListCustomersType = {
 export type ListProductsParams = {
   onSale?: boolean;
   category?: string;
-};
-
-export type ListReviewsParams = {
-  productId?: number;
-  minRating?: number;
-  limit?: number;
 };

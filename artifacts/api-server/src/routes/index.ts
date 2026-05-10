@@ -3,7 +3,6 @@ import healthRouter from "./health";
 import eventsRouter from "./events";
 import customersRouter from "./customers";
 import productsRouter from "./products";
-import reviewsRouter from "./reviews";
 import analyticsRouter from "./analytics";
 import aiRouter from "./ai";
 
@@ -13,7 +12,6 @@ router.use(healthRouter);
 router.use(eventsRouter);
 router.use(customersRouter);
 router.use(productsRouter);
-router.use(reviewsRouter);
 router.use(analyticsRouter);
 router.use(aiRouter);
 
