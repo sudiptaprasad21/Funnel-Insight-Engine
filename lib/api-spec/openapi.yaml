@@ -405,15 +405,18 @@ components:
             - page_view
             - banner_click
             - product_view
+            - sale_item_view
+            - browse_only
             - add_to_cart
             - add_to_wishlist
+            - remove_from_wishlist
+            - wishlist_to_cart
             - checkout_start
+            - cart_abandon
             - purchase
             - subscription_start
             - subscription_cancel
             - nappy_subscription_click
-            - sale_item_view
-            - browse_only
         sessionId:   { type: string }
         customerId:  { type: ["integer", "null"] }
         productId:   { type: ["integer", "null"] }
@@ -426,18 +429,22 @@ components:
         [totalVisitors, bannerClicks, bannerCTR, productViews, addToCart, addToWishlist,
          checkoutStarts, purchases, conversionRate, repeatCustomerRate]
       properties:
-        totalVisitors:      { type: integer }
-        bannerClicks:       { type: integer }
-        bannerCTR:          { type: number }
-        productViews:       { type: integer }
-        saleItemViews:      { type: integer }
-        browseOnlyCount:    { type: integer }
-        addToCart:          { type: integer }
-        addToWishlist:      { type: integer }
-        checkoutStarts:     { type: integer }
-        purchases:          { type: integer }
-        conversionRate:     { type: number }
-        repeatCustomerRate: { type: number }
+        totalVisitors:        { type: integer }
+        bannerClicks:         { type: integer }
+        bannerCTR:            { type: number }
+        productViews:         { type: integer }
+        saleItemViews:        { type: integer }
+        browseOnlyCount:      { type: integer }
+        addToCart:            { type: integer }
+        addToWishlist:        { type: integer }
+        removeFromWishlist:   { type: integer }
+        wishlistToCart:       { type: integer }
+        cartAbandons:         { type: integer }
+        checkoutStarts:       { type: integer }
+        purchases:            { type: integer }
+        conversionRate:       { type: number }
+        cartAbandonRate:      { type: number }
+        repeatCustomerRate:   { type: number }
 
     CampaignMetrics:
       type: object

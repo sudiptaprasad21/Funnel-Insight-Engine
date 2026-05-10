@@ -60,6 +60,7 @@ export default function WishlistPage() {
       next.delete(productId);
       return next;
     });
+    trackFunnelEvent("remove_from_wishlist", undefined, productId);
     toast({ title: "Removed from wishlist" });
   };
 
@@ -72,7 +73,8 @@ export default function WishlistPage() {
     moveWishlistItemsToCart(ids);
     setItems(getWishlist());
     setSelected(new Set());
-    trackFunnelEvent("add_to_cart");
+    // Fire per-product wishlist_to_cart events so we know exactly which products convert
+    ids.forEach((id) => trackFunnelEvent("wishlist_to_cart", undefined, id));
     toast({
       title: `${ids.length} item${ids.length !== 1 ? "s" : ""} moved to cart`,
       description: "Head to your cart to checkout.",
@@ -87,7 +89,7 @@ export default function WishlistPage() {
       next.delete(item.productId);
       return next;
     });
-    trackFunnelEvent("add_to_cart", undefined, item.productId);
+    trackFunnelEvent("wishlist_to_cart", undefined, item.productId);
     toast({
       title: "Moved to cart!",
       description: item.name,

@@ -19,11 +19,15 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
 
   const totalVisitors = new Set(events.map((e) => e.sessionId)).size;
   const bannerClicks = countByType("banner_click");
-  const productViews = countByType("product_view");
+  // product_view = section scroll into view; sale_item_view + browse_only = individual card clicks
+  const productViews = countByType("product_view") + countByType("sale_item_view") + countByType("browse_only");
   const saleItemViews = countByType("sale_item_view");
   const browseOnlyCount = countByType("browse_only");
-  const addToCart = countByType("add_to_cart");
-  const addToWishlist = countByType("add_to_wishlist");
+  const addToCart = countByType("add_to_cart") + countByType("wishlist_to_cart");
+  const addToWishlist = events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata !== '{"action":"remove"}').length;
+  const removeFromWishlist = countByType("remove_from_wishlist") + events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata === '{"action":"remove"}').length;
+  const wishlistToCart = countByType("wishlist_to_cart");
+  const cartAbandons = countByType("cart_abandon");
   const checkoutStarts = countByType("checkout_start");
   const purchases = countByType("purchase");
 
@@ -34,6 +38,10 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
   const conversionRate =
     totalVisitors > 0
       ? parseFloat((purchases / totalVisitors).toFixed(3))
+      : 0;
+  const cartAbandonRate =
+    addToCart > 0
+      ? parseFloat((cartAbandons / addToCart).toFixed(3))
       : 0;
 
   const customers = await db.select().from(customersTable);
@@ -52,9 +60,13 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
     browseOnlyCount,
     addToCart,
     addToWishlist,
+    removeFromWishlist,
+    wishlistToCart,
+    cartAbandons,
     checkoutStarts,
     purchases,
     conversionRate,
+    cartAbandonRate,
     repeatCustomerRate,
   });
 });
@@ -99,7 +111,7 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
   });
 
   res.json({
-    campaignName: "Happy Mom Mother's Day 2025",
+    campaignName: "Happy Mom Mother's Day 2026",
     bannerClicks,
     discountItemViews,
     discountItemPurchases,
@@ -220,10 +232,15 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const bannerClicks = events.filter(
     (e) => e.eventType === "banner_click",
   ).length;
+  // Product views = section scroll (product_view) + individual card clicks (sale_item_view + browse_only)
   const productViews =
+    events.filter((e) => e.eventType === "product_view").length +
     events.filter((e) => e.eventType === "sale_item_view").length +
-    events.filter((e) => e.eventType === "product_view").length;
-  const addToCart = events.filter((e) => e.eventType === "add_to_cart").length;
+    events.filter((e) => e.eventType === "browse_only").length;
+  const addToWishlist = events.filter((e) => e.eventType === "add_to_wishlist").length;
+  const addToCart =
+    events.filter((e) => e.eventType === "add_to_cart").length +
+    events.filter((e) => e.eventType === "wishlist_to_cart").length;
   const checkouts = events.filter(
     (e) => e.eventType === "checkout_start",
   ).length;
@@ -245,6 +262,12 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
     {
       stage: "Product View",
       users: Math.max(productViews, 148),
+      dropOff: 0,
+      dropOffRate: 0,
+    },
+    {
+      stage: "Wishlist Save",
+      users: Math.max(addToWishlist, 95),
       dropOff: 0,
       dropOffRate: 0,
     },

@@ -15,8 +15,12 @@ export interface FunnelSummary {
   browseOnlyCount?: number;
   addToCart: number;
   addToWishlist: number;
+  removeFromWishlist?: number;
+  wishlistToCart?: number;
+  cartAbandons?: number;
   checkoutStarts: number;
   purchases: number;
   conversionRate: number;
+  cartAbandonRate?: number;
   repeatCustomerRate: number;
 }

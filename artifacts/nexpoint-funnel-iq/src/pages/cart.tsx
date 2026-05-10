@@ -47,6 +47,15 @@ export default function CartPage() {
       return;
     }
     setItems(getCart());
+
+    const handleAbandon = () => {
+      const cart = getCart();
+      if (cart.length > 0) {
+        trackFunnelEvent("cart_abandon");
+      }
+    };
+    window.addEventListener("beforeunload", handleAbandon);
+    return () => window.removeEventListener("beforeunload", handleAbandon);
   }, []);
 
   const handleRemove = (productId: number) => {
@@ -80,7 +89,7 @@ export default function CartPage() {
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
 
   const handlePlaceOrder = () => {
-    trackFunnelEvent("checkout_complete");
+    trackFunnelEvent("purchase");
     clearCart();
     setItems([]);
     setCheckoutOpen(false);
@@ -105,7 +114,10 @@ export default function CartPage() {
               variant="ghost"
               size="sm"
               className="gap-2 text-slate-600 hover:text-red-700"
-              onClick={() => navigate("/")}
+              onClick={() => {
+                if (items.length > 0) trackFunnelEvent("cart_abandon");
+                navigate("/");
+              }}
             >
               <ArrowLeft className="h-4 w-4" />
               Continue Shopping

@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
@@ -73,6 +73,12 @@ export default function DashboardPage() {
             icon={<Target className="h-4 w-4 text-green-500" />}
           />
           <MetricCard
+            title="Cart Abandon Rate"
+            value={summary?.cartAbandonRate !== undefined ? `${(summary.cartAbandonRate * 100).toFixed(1)}%` : undefined}
+            loading={summaryLoading}
+            icon={<TrendingDown className="h-4 w-4 text-orange-500" />}
+          />
+          <MetricCard
             title="Repeat Rate"
             value={summary ? `${(summary.repeatCustomerRate * 100).toFixed(1)}%` : undefined}
             loading={summaryLoading}
@@ -132,11 +138,14 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {[
                       { label: "Product Views", value: summary.productViews, icon: <Users className="h-4 w-4 text-blue-400" /> },
-                      { label: "Add to Cart", value: summary.addToCart, icon: <ShoppingCart className="h-4 w-4 text-purple-400" /> },
-                      { label: "Checkout Starts", value: summary.checkoutStarts, icon: <Target className="h-4 w-4 text-orange-400" /> },
-                      { label: "Purchases", value: summary.purchases, icon: <Target className="h-4 w-4 text-green-500" /> },
                       { label: "Banner Clicks", value: summary.bannerClicks, icon: <MousePointerClick className="h-4 w-4 text-red-400" /> },
-                      { label: "Wishlist Adds", value: summary.addToWishlist, icon: <RefreshCw className="h-4 w-4 text-pink-400" /> },
+                      { label: "Wishlist Adds", value: summary.addToWishlist, icon: <Heart className="h-4 w-4 text-pink-400" /> },
+                      { label: "Wishlist → Cart", value: summary.wishlistToCart, icon: <ShoppingCart className="h-4 w-4 text-indigo-400" /> },
+                      { label: "Add to Cart", value: summary.addToCart, icon: <ShoppingCart className="h-4 w-4 text-purple-400" /> },
+                      { label: "Cart Abandons", value: summary.cartAbandons, icon: <TrendingDown className="h-4 w-4 text-orange-400" /> },
+                      { label: "Checkout Starts", value: summary.checkoutStarts, icon: <Target className="h-4 w-4 text-yellow-500" /> },
+                      { label: "Purchases", value: summary.purchases, icon: <Target className="h-4 w-4 text-green-500" /> },
+                      { label: "Wishlist Removes", value: summary.removeFromWishlist, icon: <HeartOff className="h-4 w-4 text-slate-400" /> },
                     ].map(({ label, value, icon }) => (
                       <div key={label} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
                         {icon}

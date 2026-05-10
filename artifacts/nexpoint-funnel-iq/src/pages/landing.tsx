@@ -50,7 +50,26 @@ export default function LandingPage() {
     const timer = setInterval(() => {
       setTimeLeft(SALE_END.getTime() - Date.now());
     }, 1000);
-    return () => clearInterval(timer);
+
+    // Fire product_view once when the products grid scrolls into viewport
+    const productsEl = document.getElementById("products");
+    let productViewFired = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !productViewFired) {
+          productViewFired = true;
+          trackFunnelEvent("product_view");
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    if (productsEl) observer.observe(productsEl);
+
+    return () => {
+      clearInterval(timer);
+      observer.disconnect();
+    };
   }, []);
 
   const { data: products, isLoading } = useListProducts(undefined, {
@@ -97,16 +116,17 @@ export default function LandingPage() {
     onSale: boolean,
     category: string,
   ) => {
-    trackFunnelEvent("add_to_wishlist", undefined, productId);
     setWishlistIds((prev) => {
       const next = new Set(prev);
       if (next.has(productId)) {
         removeFromWishlist(productId);
         next.delete(productId);
+        trackFunnelEvent("remove_from_wishlist", undefined, productId);
         toast({ title: "Removed from wishlist", description: productName });
       } else {
         addToWishlist({ productId, name: productName, price, salePrice, onSale, category });
         next.add(productId);
+        trackFunnelEvent("add_to_wishlist", undefined, productId);
         toast({ title: "Saved to wishlist!", description: `${productName} added to your wishlist.` });
       }
       return next;
