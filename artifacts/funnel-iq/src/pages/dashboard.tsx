@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle } from "lucide-react";
 
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FunnelExplainer } from "@/components/FunnelExplainer";
 
@@ -55,9 +55,12 @@ export default function DashboardPage() {
     },
   });
 
+  const [lastConversionSynced, setLastConversionSynced] = useState<string | null>(null);
+
   const syncConversionRates = useSyncConversionRatesToGSheet({
     mutation: {
       onSuccess: (data) => {
+        setLastConversionSynced(data.syncedAt);
         toast({ title: "Conversion Rates synced", description: `${data.rowsWritten} rows written to "Conversion Rates" tab.` });
       },
       onError: () => {
@@ -66,10 +69,11 @@ export default function DashboardPage() {
     },
   });
 
-  // Auto-sync to Google Sheets every 30 minutes
+  // Auto-sync both sheets to Google Sheets every 30 minutes
   useEffect(() => {
     const id = setInterval(() => {
       syncSheet.mutate({});
+      syncConversionRates.mutate({});
     }, 30 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
@@ -424,7 +428,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Exports to "Conversion Rates" tab in the same Google Sheet
+                  Auto-syncs to Google Sheets every 30 min — "Conversion Rates" tab
+                  {lastConversionSynced && (
+                    <span className="ml-1">· Last synced: {new Date(lastConversionSynced).toLocaleString()}</span>
+                  )}
                 </p>
               </CardHeader>
               <CardContent>
