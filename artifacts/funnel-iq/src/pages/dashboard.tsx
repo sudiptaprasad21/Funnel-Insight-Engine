@@ -72,8 +72,8 @@ export default function DashboardPage() {
   // Auto-sync sheets to Google Sheets every 30 minutes
   useEffect(() => {
     const id = setInterval(() => {
-      syncSheet.mutate({});
-      syncConversionRates.mutate({});
+      syncSheet.mutate();
+      syncConversionRates.mutate();
     }, 30 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
@@ -141,7 +141,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => syncSheet.mutate({})}
+                      onClick={() => syncSheet.mutate()}
                       disabled={syncSheet.isPending}
                       title="Sync to Google Sheets"
                       data-testid="button-sync-gsheet"
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                       size="sm"
                       variant={analyzeDropOff.data ? "outline" : "default"}
                       className={analyzeDropOff.data ? "" : "bg-violet-600 hover:bg-violet-700 text-white"}
-                      onClick={() => analyzeDropOff.mutate({}, {
+                      onClick={() => analyzeDropOff.mutate(undefined, {
                         onError: () => toast({ title: "Analysis Failed", description: "Could not run AI analysis. Please try again.", variant: "destructive" }),
                       })}
                       disabled={analyzeDropOff.isPending}
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => syncConversionRates.mutate({})}
+                      onClick={() => syncConversionRates.mutate()}
                       disabled={syncConversionRates.isPending}
                       title="Sync to Google Sheets"
                       className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"
@@ -481,32 +481,32 @@ export default function DashboardPage() {
                     {
                       label: "Wishlist Utilisation",
                       definition: "Wishlist-to-cart moves ÷ wishlist-save events. Measures how many saved items were eventually acted on.",
-                      value: pct(summary.wishlistToCart, summary.addToWishlist),
-                      fraction: `${summary.wishlistToCart} moved-to-cart events from ${summary.addToWishlist} wishlist-save events`,
+                      value: pct(summary.wishlistToCart ?? 0, summary.addToWishlist ?? 0),
+                      fraction: `${summary.wishlistToCart ?? 0} moved-to-cart events from ${summary.addToWishlist ?? 0} wishlist-save events`,
                       higherIsBetter: true,
                       good: 50, warn: 20,
                     },
                     {
                       label: "Cart Abandon Rate",
                       definition: "Cart-abandon events ÷ add-to-cart events. Each time a user adds to cart and leaves without buying, one abandon event is recorded.",
-                      value: pct(summary.cartAbandons, summary.addToCart),
-                      fraction: `${summary.cartAbandons} abandon events from ${summary.addToCart} add-to-cart events`,
+                      value: pct(summary.cartAbandons ?? 0, summary.addToCart ?? 0),
+                      fraction: `${summary.cartAbandons ?? 0} abandon events from ${summary.addToCart ?? 0} add-to-cart events`,
                       higherIsBetter: false,
                       good: 30, warn: 60,
                     },
                     {
                       label: "Subscription Conversion",
                       definition: "Subscription completions ÷ subscription-intent events. One session can fire intent multiple times (e.g. opening the subscription panel twice), so the rate can be below 100% even if every interested user subscribed.",
-                      value: pct(summary.subscriptions, summary.intendedSubscriptions),
-                      fraction: `${summary.subscriptions} subscriptions from ${summary.intendedSubscriptions} intent events`,
+                      value: pct(summary.subscriptions ?? 0, summary.intendedSubscriptions ?? 0),
+                      fraction: `${summary.subscriptions ?? 0} subscriptions from ${summary.intendedSubscriptions ?? 0} intent events`,
                       higherIsBetter: true,
                       good: 50, warn: 25,
                     },
                     {
                       label: "Browse-only Rate",
                       definition: "Browse-only events ÷ total unique visitor sessions. A browse-only event fires when a visitor views products but never adds to cart or shows subscription intent.",
-                      value: pct(summary.browseOnlyCount, summary.totalVisitors),
-                      fraction: `${summary.browseOnlyCount} browse-only events from ${summary.totalVisitors} unique sessions`,
+                      value: pct(summary.browseOnlyCount ?? 0, summary.totalVisitors ?? 0),
+                      fraction: `${summary.browseOnlyCount ?? 0} browse-only events from ${summary.totalVisitors ?? 0} unique sessions`,
                       higherIsBetter: false,
                       good: 30, warn: 60,
                     },

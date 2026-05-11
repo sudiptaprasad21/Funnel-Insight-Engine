@@ -179,7 +179,7 @@ export default function CustomersPage() {
   // Auto-sync every 30 minutes
   useEffect(() => {
     const id = setInterval(() => {
-      syncCustomers.mutate({});
+      syncCustomers.mutate();
     }, 30 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
@@ -336,7 +336,7 @@ export default function CustomersPage() {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={() => syncCustomers.mutate({})}
+                  onClick={() => syncCustomers.mutate()}
                   disabled={syncCustomers.isPending}
                   title="Sync to Google Sheets"
                   className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"

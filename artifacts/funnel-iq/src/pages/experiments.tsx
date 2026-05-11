@@ -122,7 +122,7 @@ export default function ExperimentsPage() {
           </div>
           <div className="flex items-center gap-1 shrink-0 mt-1">
             <button
-              onClick={() => syncExperiments.mutate({})}
+              onClick={() => syncExperiments.mutate()}
               disabled={syncExperiments.isPending}
               title="Sync to Google Sheets"
               className="p-2 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"
