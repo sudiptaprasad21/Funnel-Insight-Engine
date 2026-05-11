@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle } from "lucide-react";
 
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FunnelExplainer } from "@/components/FunnelExplainer";
 
@@ -52,6 +53,14 @@ export default function DashboardPage() {
       },
     },
   });
+
+  // Auto-sync to Google Sheets every 30 minutes
+  useEffect(() => {
+    const id = setInterval(() => {
+      syncSheet.mutate({});
+    }, 30 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <DashboardLayout>
@@ -106,14 +115,47 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="col-span-1 lg:col-span-2 space-y-8">
+        <div className="space-y-8">
             <FunnelExplainer />
 
             <Card>
               <CardHeader>
-                <CardTitle>Funnel Drop-off Analysis</CardTitle>
-                <CardDescription>User progression through the Mother's Day campaign</CardDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle>Funnel Drop-off Analysis</CardTitle>
+                    <CardDescription>User progression through the Mother's Day campaign</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => syncSheet.mutate({})}
+                      disabled={syncSheet.isPending}
+                      title="Sync to Google Sheets"
+                      data-testid="button-sync-gsheet"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"
+                    >
+                      {syncSheet.isPending
+                        ? <RefreshCw className="h-4 w-4 animate-spin" />
+                        : <FileSpreadsheet className="h-4 w-4" />}
+                    </button>
+                    {sheetInfo?.sheetUrl && (
+                      <a
+                        href={sheetInfo.sheetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open Google Sheet"
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Auto-syncs to Google Sheets every 30 min
+                  {sheetInfo?.lastSyncedAt && (
+                    <span className="ml-1">· Last synced: {new Date(sheetInfo.lastSyncedAt).toLocaleString()}</span>
+                  )}
+                </p>
               </CardHeader>
               <CardContent>
                 {dropOffLoading ? (
@@ -376,58 +418,6 @@ export default function DashboardPage() {
                 ) : null}
               </CardContent>
             </Card>
-          </div>
-
-          <div className="col-span-1 space-y-6">
-            {/* Google Sheets Export */}
-            <Card className="border-emerald-200/60 bg-emerald-50/30 dark:bg-emerald-950/10">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
-                  <CardTitle className="text-base">Google Sheets Export</CardTitle>
-                </div>
-                <CardDescription className="text-xs">
-                  Sync live funnel stage data to a Google Sheet for offline analysis or sharing.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => syncSheet.mutate({})}
-                  disabled={syncSheet.isPending}
-                  data-testid="button-sync-gsheet"
-                >
-                  {syncSheet.isPending ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  )}
-                  {syncSheet.isPending ? "Syncing…" : "Sync to Sheets"}
-                </Button>
-                {sheetInfo?.lastSyncedAt && (
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Check className="h-3 w-3 text-emerald-500 shrink-0" />
-                    Last synced: {new Date(sheetInfo.lastSyncedAt).toLocaleString()}
-                  </div>
-                )}
-                {sheetInfo?.sheetUrl && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-emerald-700 hover:text-emerald-800 dark:text-emerald-400"
-                    asChild
-                  >
-                    <a href={sheetInfo.sheetUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                      Open Sheet
-                    </a>
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-          </div>
         </div>
       </div>
     </DashboardLayout>
