@@ -16,7 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Repeat2, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info, BarChart2 } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, RefreshCw, Repeat2, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info, BarChart2 } from "lucide-react";
+import aiBrainImg from "@assets/ai-brain.png";
 
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState, type ReactNode } from "react";
@@ -254,7 +255,7 @@ export default function DashboardPage() {
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <BrainCircuit className="h-5 w-5 text-violet-500" />
+                    <img src={aiBrainImg} className="h-5 w-5" style={{ filter: "brightness(0) saturate(100%) invert(41%) sepia(69%) saturate(1000%) hue-rotate(234deg) brightness(0.97)" }} alt="" />
                     <div>
                       <CardTitle className="text-base">AI Drop-off Analysis</CardTitle>
                       <CardDescription className="text-xs mt-0.5">
@@ -407,7 +408,7 @@ export default function DashboardPage() {
               {!analyzeDropOff.data && !analyzeDropOff.isPending && (
                 <CardContent>
                   <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <BrainCircuit className="h-10 w-10 text-violet-200 dark:text-violet-800 mb-3" />
+                    <img src={aiBrainImg} className="h-10 w-10 mb-3" style={{ filter: "brightness(0) saturate(100%) invert(83%) sepia(25%) saturate(450%) hue-rotate(215deg) brightness(1.08)" }} alt="" />
                     <p className="text-sm text-muted-foreground max-w-xs">
                       Click "Analyse with AI" to get AI-powered drop-off reasons, hypotheses, and an experiment suggestion based on real funnel data.
                     </p>

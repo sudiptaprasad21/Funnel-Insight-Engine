@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import aiBrainImg from "@assets/ai-brain.png";
 import {
   useListExperiments,
   getListExperimentsQueryKey,
@@ -113,7 +114,10 @@ export default function ExperimentsPage() {
         {/* Page header */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1">Experiments Log</h1>
+            <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight mb-1">
+              <img src={aiBrainImg} className="h-8 w-8" style={{ filter: "brightness(0) saturate(100%) invert(41%) sepia(69%) saturate(1000%) hue-rotate(234deg) brightness(0.97)" }} alt="" />
+              Experiments Log
+            </h1>
             <p className="text-muted-foreground text-sm">Track AI-suggested A/B experiments through their full lifecycle</p>
           </div>
           <div className="flex items-center gap-1 shrink-0 mt-1">
