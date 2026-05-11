@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, RefreshCw, Repeat2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -42,6 +42,74 @@ export default function CustomersPage() {
   });
 
   const [lastCustomerSynced, setLastCustomerSynced] = useState<string | null>(null);
+  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
+
+  const chartData = useMemo(() => {
+    if (!customers) return [];
+    const now = new Date();
+
+    if (period === "monthly") {
+      return Array.from({ length: 5 }, (_, i) => {
+        const offsetMonths = 4 - i;
+        const d = new Date(now.getFullYear(), now.getMonth() - offsetMonths, 1);
+        const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+        const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+        const label = monthStart.toLocaleDateString("en-US", { month: "short" });
+        const inPeriod = customers.filter((c) => {
+          const t = new Date(c.createdAt).getTime();
+          return t >= monthStart.getTime() && t <= monthEnd.getTime();
+        });
+        return {
+          label,
+          newCustomers: inPeriod.filter((c) => !c.isRepeat).length,
+          repeatCustomers: inPeriod.filter((c) => c.isRepeat).length,
+          subscriptions: inPeriod.filter((c) => c.isSubscribed).length,
+        };
+      });
+    }
+
+    if (period === "weekly") {
+      return Array.from({ length: 8 }, (_, i) => {
+        const offsetDays = now.getDay() === 0 ? 6 : now.getDay() - 1; // days since Mon
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - offsetDays - 7 * (7 - i));
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        const label = weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const inPeriod = customers.filter((c) => {
+          const t = new Date(c.createdAt).getTime();
+          return t >= weekStart.getTime() && t <= weekEnd.getTime();
+        });
+        return {
+          label,
+          newCustomers: inPeriod.filter((c) => !c.isRepeat).length,
+          repeatCustomers: inPeriod.filter((c) => c.isRepeat).length,
+          subscriptions: inPeriod.filter((c) => c.isSubscribed).length,
+        };
+      });
+    }
+
+    // daily — last 7 days
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(now);
+      d.setDate(now.getDate() - (6 - i));
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+      const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const inPeriod = customers.filter((c) => {
+        const t = new Date(c.createdAt).getTime();
+        return t >= dayStart.getTime() && t <= dayEnd.getTime();
+      });
+      return {
+        label,
+        newCustomers: inPeriod.filter((c) => !c.isRepeat).length,
+        repeatCustomers: inPeriod.filter((c) => c.isRepeat).length,
+        subscriptions: inPeriod.filter((c) => c.isSubscribed).length,
+      };
+    });
+  }, [period, customers]);
 
   const syncCustomers = useSyncCustomersToGSheet({
     mutation: {
@@ -103,18 +171,41 @@ export default function CustomersPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <Card className="col-span-1 lg:col-span-2">
             <CardHeader>
-              <CardTitle>Monthly Customer Trends</CardTitle>
-              <CardDescription>New customers, repeat buyers, and subscriptions over time</CardDescription>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle>Customer Trends</CardTitle>
+                  <CardDescription>
+                    {period === "daily" ? "New customers, repeat buyers, and subscriptions — last 7 days" :
+                     period === "weekly" ? "New customers, repeat buyers, and subscriptions — last 8 weeks" :
+                     "New customers, repeat buyers, and subscriptions — last 5 months"}
+                  </CardDescription>
+                </div>
+                <div className="flex items-center rounded-lg border border-border overflow-hidden shrink-0 text-xs font-medium">
+                  {(["daily", "weekly", "monthly"] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPeriod(p)}
+                      className={`px-3 py-1.5 capitalize transition-colors ${
+                        period === p
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {p === "daily" ? "Daily" : p === "weekly" ? "Weekly" : "Monthly"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {trendsLoading ? (
+              {customersLoading ? (
                 <Skeleton className="h-[280px] w-full" />
-              ) : trends?.monthlyTrend ? (
+              ) : chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={trends.monthlyTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{
                         background: "hsl(var(--card))",
@@ -124,9 +215,9 @@ export default function CustomersPage() {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="newCustomers" name="New Customers" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="repeatCustomers" name="Repeat Customers" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="subscriptions" name="Subscriptions" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="newCustomers" name="New Customers" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="repeatCustomers" name="Repeat Customers" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="subscriptions" name="Subscriptions" fill="#22c55e" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
