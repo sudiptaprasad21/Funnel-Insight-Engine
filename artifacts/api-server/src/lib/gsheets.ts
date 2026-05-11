@@ -31,7 +31,7 @@ export async function clearAndWriteSheet(
 
   const appendResp = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${spreadsheetId}/values/A1:append?valueInputOption=USER_ENTERED&insertDataOption=OVERWRITE`,
+    `/v4/spreadsheets/${spreadsheetId}/values/A1:append?valueInputOption=RAW&insertDataOption=OVERWRITE`,
     {
       method: "POST",
       body: JSON.stringify({ values: rows }),
@@ -93,7 +93,7 @@ export async function clearAndWriteNamedSheet(
 
   const appendResp = await connectors.proxy(
     "google-sheet",
-    `/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${tabTitle}!A1`)}:append?valueInputOption=USER_ENTERED&insertDataOption=OVERWRITE`,
+    `/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${tabTitle}!A1`)}:append?valueInputOption=RAW&insertDataOption=OVERWRITE`,
     {
       method: "POST",
       body: JSON.stringify({ values: rows }),
