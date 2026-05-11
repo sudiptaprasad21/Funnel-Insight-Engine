@@ -382,39 +382,128 @@ export default function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Funnel Summary</CardTitle>
-                <CardDescription>Key event counts across the campaign funnel</CardDescription>
+                <CardTitle>Conversion Rates</CardTitle>
+                <CardDescription>How efficiently each stage of the funnel converts to the next</CardDescription>
               </CardHeader>
               <CardContent>
                 {summaryLoading ? (
-                  <Skeleton className="h-[180px] w-full" />
-                ) : summary ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {[
-                      { label: "Product Views", value: summary.productViews, icon: <Users className="h-4 w-4 text-blue-400" /> },
-                      { label: "Detail Views", value: summary.productDetailViews, icon: <MousePointerClick className="h-4 w-4 text-sky-500" /> },
-                      { label: "Sub Intents", value: summary.intendedSubscriptions, icon: <RefreshCw className="h-4 w-4 text-amber-500" /> },
-                      { label: "Subscribed", value: summary.subscriptions, icon: <RefreshCw className="h-4 w-4 text-green-500" /> },
-                      { label: "Total Customers", value: customerTrends?.totalCustomers, icon: <Users className="h-4 w-4 text-indigo-400" /> },
-                      { label: "Active Subscribers", value: customerTrends?.activeSubscriptions, icon: <TrendingUp className="h-4 w-4 text-emerald-500" /> },
-                      { label: "Banner Clicks", value: summary.bannerClicks, icon: <MousePointerClick className="h-4 w-4 text-red-400" /> },
-                      { label: "Wishlist Adds", value: summary.addToWishlist, icon: <Heart className="h-4 w-4 text-pink-400" /> },
-                      { label: "Wishlist → Cart", value: summary.wishlistToCart, icon: <ShoppingCart className="h-4 w-4 text-indigo-400" /> },
-                      { label: "Add to Cart", value: summary.addToCart, icon: <ShoppingCart className="h-4 w-4 text-purple-400" /> },
-                      { label: "Cart Abandons", value: summary.cartAbandons, icon: <TrendingDown className="h-4 w-4 text-orange-400" /> },
-                      { label: "Checkout / Purchased", value: summary.purchases, icon: <Target className="h-4 w-4 text-purple-500" /> },
-                      { label: "Wishlist Removes", value: summary.removeFromWishlist, icon: <HeartOff className="h-4 w-4 text-slate-400" /> },
-                    ].map(({ label, value, icon }) => (
-                      <div key={label} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-                        {icon}
-                        <div>
-                          <p className="text-xs text-muted-foreground">{label}</p>
-                          <p className="font-bold">{value ?? 0}</p>
+                  <Skeleton className="h-[220px] w-full" />
+                ) : summary ? (() => {
+                  const pct = (num: number, den: number) =>
+                    den > 0 ? Math.min(100, Math.round((num / den) * 100)) : null;
+
+                  const metrics = [
+                    {
+                      label: "Product → Cart Rate",
+                      definition: "Of all product-view events, how many led to an add-to-cart",
+                      value: pct(summary.addToCart, summary.productViews),
+                      fraction: `${summary.addToCart} of ${summary.productViews} product views`,
+                      higherIsBetter: true,
+                      good: 8, warn: 4,
+                    },
+                    {
+                      label: "Cart → Purchase Rate",
+                      definition: "Of sessions that added to cart, how many completed a purchase",
+                      value: pct(summary.purchases, summary.addToCart),
+                      fraction: `${summary.purchases} of ${summary.addToCart} cart sessions`,
+                      higherIsBetter: true,
+                      good: 60, warn: 40,
+                    },
+                    {
+                      label: "Wishlist Utilisation",
+                      definition: "Of items saved to wishlist, how many were later moved to cart",
+                      value: pct(summary.wishlistToCart, summary.addToWishlist),
+                      fraction: `${summary.wishlistToCart} of ${summary.addToWishlist} wishlist adds`,
+                      higherIsBetter: true,
+                      good: 50, warn: 20,
+                    },
+                    {
+                      label: "Cart Abandon Rate",
+                      definition: "Of sessions with items in cart, how many left without buying",
+                      value: pct(summary.cartAbandons, summary.addToCart),
+                      fraction: `${summary.cartAbandons} of ${summary.addToCart} cart sessions`,
+                      higherIsBetter: false,
+                      good: 30, warn: 60,
+                    },
+                    {
+                      label: "Subscription Conversion",
+                      definition: "Of sessions that showed subscription intent, how many subscribed",
+                      value: pct(summary.subscriptions, summary.intendedSubscriptions),
+                      fraction: `${summary.subscriptions} of ${summary.intendedSubscriptions} intent sessions`,
+                      higherIsBetter: true,
+                      good: 50, warn: 25,
+                    },
+                    {
+                      label: "Browse-only Rate",
+                      definition: "Sessions that viewed products but never added to cart or showed subscription intent",
+                      value: pct(summary.browseOnlyCount, summary.totalVisitors),
+                      fraction: `${summary.browseOnlyCount} of ${summary.totalVisitors} sessions`,
+                      higherIsBetter: false,
+                      good: 30, warn: 60,
+                    },
+                  ];
+
+                  const colorClass = (v: number | null, higherIsBetter: boolean, good: number, warn: number) => {
+                    if (v === null) return "text-slate-400";
+                    if (higherIsBetter) {
+                      if (v >= good) return "text-emerald-600 dark:text-emerald-400";
+                      if (v >= warn) return "text-amber-500";
+                      return "text-red-500";
+                    } else {
+                      if (v < good) return "text-emerald-600 dark:text-emerald-400";
+                      if (v < warn) return "text-amber-500";
+                      return "text-red-500";
+                    }
+                  };
+
+                  const badgeClass = (v: number | null, higherIsBetter: boolean, good: number, warn: number) => {
+                    if (v === null) return "bg-slate-100 text-slate-500 dark:bg-slate-800";
+                    if (higherIsBetter) {
+                      if (v >= good) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400";
+                      if (v >= warn) return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
+                      return "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400";
+                    } else {
+                      if (v < good) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400";
+                      if (v < warn) return "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
+                      return "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400";
+                    }
+                  };
+
+                  const badgeLabel = (v: number | null, higherIsBetter: boolean, good: number, warn: number) => {
+                    if (v === null) return "No data";
+                    if (higherIsBetter) {
+                      if (v >= good) return "Healthy";
+                      if (v >= warn) return "Watch";
+                      return "Needs attention";
+                    } else {
+                      if (v < good) return "Healthy";
+                      if (v < warn) return "Watch";
+                      return "Needs attention";
+                    }
+                  };
+
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {metrics.map((m) => (
+                        <div key={m.label} className="p-4 rounded-xl border bg-card space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
+                              {m.label}
+                            </p>
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${badgeClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
+                              {badgeLabel(m.value, m.higherIsBetter, m.good, m.warn)}
+                            </span>
+                          </div>
+                          <p className={`text-3xl font-bold tabular-nums ${colorClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
+                            {m.value !== null ? `${m.value}%` : "—"}
+                          </p>
+                          <p className="text-xs text-muted-foreground leading-snug">{m.definition}</p>
+                          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{m.fraction}</p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
+                      ))}
+                    </div>
+                  );
+                })() : null}
               </CardContent>
             </Card>
         </div>
