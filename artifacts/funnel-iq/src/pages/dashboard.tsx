@@ -482,25 +482,68 @@ export default function DashboardPage() {
                     }
                   };
 
+                  const benchmarks = [
+                    { label: "Product → Cart Rate",    healthy: "≥ 8%",  watch: "4–7%",   poor: "< 4%",   note: "higher is better" },
+                    { label: "Cart → Purchase Rate",   healthy: "≥ 60%", watch: "40–59%", poor: "< 40%",  note: "higher is better" },
+                    { label: "Wishlist Utilisation",   healthy: "≥ 50%", watch: "20–49%", poor: "< 20%",  note: "higher is better" },
+                    { label: "Cart Abandon Rate",      healthy: "< 30%", watch: "30–59%", poor: "≥ 60%",  note: "lower is better" },
+                    { label: "Subscription Conversion",healthy: "≥ 50%", watch: "25–49%", poor: "< 25%",  note: "higher is better" },
+                    { label: "Browse-only Rate",       healthy: "< 30%", watch: "30–59%", poor: "≥ 60%",  note: "lower is better" },
+                  ];
+
                   return (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {metrics.map((m) => (
-                        <div key={m.label} className="p-4 rounded-xl border bg-card space-y-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
-                              {m.label}
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {metrics.map((m) => (
+                          <div key={m.label} className="p-4 rounded-xl border bg-card space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
+                                {m.label}
+                              </p>
+                              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${badgeClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
+                                {badgeLabel(m.value, m.higherIsBetter, m.good, m.warn)}
+                              </span>
+                            </div>
+                            <p className={`text-3xl font-bold tabular-nums ${colorClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
+                              {m.value !== null ? `${m.value}%` : "—"}
                             </p>
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${badgeClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
-                              {badgeLabel(m.value, m.higherIsBetter, m.good, m.warn)}
-                            </span>
+                            <p className="text-xs text-muted-foreground leading-snug">{m.definition}</p>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{m.fraction}</p>
                           </div>
-                          <p className={`text-3xl font-bold tabular-nums ${colorClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
-                            {m.value !== null ? `${m.value}%` : "—"}
-                          </p>
-                          <p className="text-xs text-muted-foreground leading-snug">{m.definition}</p>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{m.fraction}</p>
+                        ))}
+                      </div>
+
+                      {/* Benchmark legend */}
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-3">
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                          Status thresholds — based on e-commerce industry benchmarks
+                        </p>
+                        <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3">
+                          {[
+                            { color: "bg-emerald-500", label: "Healthy" },
+                            { color: "bg-amber-400",   label: "Watch" },
+                            { color: "bg-red-500",     label: "Needs attention" },
+                          ].map(({ color, label }) => (
+                            <span key={label} className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+                              <span className={`h-2 w-2 rounded-full ${color}`} />
+                              {label}
+                            </span>
+                          ))}
                         </div>
-                      ))}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+                          {benchmarks.map((b) => (
+                            <div key={b.label} className="flex flex-col gap-0.5">
+                              <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{b.label}</p>
+                              <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 flex-wrap">
+                                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />{b.healthy}</span>
+                                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />{b.watch}</span>
+                                <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500 inline-block" />{b.poor}</span>
+                                <span className="text-slate-400 italic">({b.note})</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   );
                 })() : null}
