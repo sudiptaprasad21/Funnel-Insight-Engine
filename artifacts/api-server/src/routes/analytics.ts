@@ -4,8 +4,10 @@ import {
   funnelEventsTable,
   customersTable,
   productsTable,
+  settingsTable,
 } from "@workspace/db";
-import { sql, count, avg } from "drizzle-orm";
+import { sql, count, avg, eq } from "drizzle-orm";
+import { createSpreadsheet, clearAndWriteSheet, sheetUrl } from "../lib/gsheets";
 
 const router: IRouter = Router();
 
@@ -329,6 +331,106 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   ];
 
   res.json({ stages, topDropOffStage, dropOffReasons });
+});
+
+// ─── Sheet Info ───────────────────────────────────────────────────────────────
+router.get("/analytics/sheet-info", async (req, res): Promise<void> => {
+  const rows = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "gsheet_spreadsheet_id"));
+
+  if (!rows.length || !rows[0]) {
+    res.json({ sheetUrl: null, spreadsheetId: null, lastSyncedAt: null });
+    return;
+  }
+
+  const spreadsheetId = rows[0].value;
+  const lastRows = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "gsheet_last_synced"));
+
+  res.json({
+    spreadsheetId,
+    sheetUrl: sheetUrl(spreadsheetId),
+    lastSyncedAt: lastRows[0]?.value ?? null,
+  });
+});
+
+// ─── Sync Funnel Data to Google Sheets ────────────────────────────────────────
+router.post("/analytics/sync-gsheet", async (req, res): Promise<void> => {
+  const eventCounts = await db
+    .select({
+      eventType: funnelEventsTable.eventType,
+      sessions: sql<number>`count(distinct ${funnelEventsTable.sessionId})`,
+    })
+    .from(funnelEventsTable)
+    .groupBy(funnelEventsTable.eventType);
+
+  const countMap: Record<string, number> = {};
+  for (const row of eventCounts) {
+    countMap[row.eventType] = row.sessions;
+  }
+
+  const totalVisitors = Math.max(countMap["page_view"] ?? 0, 1);
+
+  const STAGES = [
+    { name: "Landing Page",        key: "page_view" },
+    { name: "Banner Click",        key: "banner_click" },
+    { name: "Product View",        key: "product_view" },
+    { name: "Product Detail View", key: "product_detail_view" },
+    { name: "Add to Wishlist",     key: "add_to_wishlist" },
+    { name: "Add to Cart",         key: "add_to_cart" },
+    { name: "Checkout Start",      key: "checkout_start" },
+    { name: "Purchased",           key: "purchase" },
+    { name: "Subscription Intent", key: "intended_subscription" },
+    { name: "Subscribed",          key: "subscribed" },
+  ];
+
+  const now = new Date().toISOString();
+
+  const headers = ["Stage", "Sessions", "% of Visitors", "Drop-off vs Previous", "Synced At"];
+  const dataRows: (string | number)[][] = STAGES.map((stage, i) => {
+    const sessions = countMap[stage.key] ?? 0;
+    const pct = ((sessions / totalVisitors) * 100).toFixed(1);
+    const prev = i > 0 ? (countMap[STAGES[i - 1]!.key] ?? 0) : totalVisitors;
+    const dropOff = prev > sessions ? prev - sessions : 0;
+    return [stage.name, sessions, `${pct}%`, dropOff, now];
+  });
+
+  const rows: (string | number)[][] = [headers, ...dataRows];
+
+  // Create or retrieve spreadsheet
+  const existing = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "gsheet_spreadsheet_id"));
+
+  let spreadsheetId: string;
+  if (existing.length && existing[0]) {
+    spreadsheetId = existing[0].value;
+  } else {
+    spreadsheetId = await createSpreadsheet("Nexpoint Funnel IQ — Funnel Stages");
+    await db
+      .insert(settingsTable)
+      .values({ key: "gsheet_spreadsheet_id", value: spreadsheetId })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value: spreadsheetId } });
+  }
+
+  const rowsWritten = await clearAndWriteSheet(spreadsheetId, rows);
+
+  await db
+    .insert(settingsTable)
+    .values({ key: "gsheet_last_synced", value: now })
+    .onConflictDoUpdate({ target: settingsTable.key, set: { value: now, updatedAt: new Date() } });
+
+  res.json({
+    spreadsheetId,
+    sheetUrl: sheetUrl(spreadsheetId),
+    syncedAt: now,
+    rowsWritten,
+  });
 });
 
 export default router;

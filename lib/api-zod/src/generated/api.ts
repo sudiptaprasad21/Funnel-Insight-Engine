@@ -181,6 +181,25 @@ export const GetDropOffAnalysisResponse = zod.object({
 });
 
 /**
+ * @summary Get the linked Google Sheet info (URL and last sync time)
+ */
+export const GetSheetInfoResponse = zod.object({
+  sheetUrl: zod.string().nullable(),
+  spreadsheetId: zod.string().nullable(),
+  lastSyncedAt: zod.string().nullable(),
+});
+
+/**
+ * @summary Sync current funnel stage data to Google Sheets, creating the sheet if needed
+ */
+export const SyncToGSheetResponse = zod.object({
+  sheetUrl: zod.string(),
+  spreadsheetId: zod.string(),
+  syncedAt: zod.coerce.date(),
+  rowsWritten: zod.number(),
+});
+
+/**
  * @summary List customers with subscription and repeat status
  */
 export const listCustomersQueryLimitDefault = 50;

@@ -222,6 +222,22 @@ export interface ProductInput {
   isNappySub?: boolean;
 }
 
+export interface SheetInfo {
+  /** @nullable */
+  sheetUrl: string | null;
+  /** @nullable */
+  spreadsheetId: string | null;
+  /** @nullable */
+  lastSyncedAt: string | null;
+}
+
+export interface SheetSyncResult {
+  sheetUrl: string;
+  spreadsheetId: string;
+  syncedAt: string;
+  rowsWritten: number;
+}
+
 export interface DiagnoseInput {
   /** The stage to focus the diagnosis on (e.g. "checkout", "cart", "banner") */
   funnelStage: string;

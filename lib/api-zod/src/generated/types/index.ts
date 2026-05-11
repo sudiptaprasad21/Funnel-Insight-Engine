@@ -33,6 +33,8 @@ export * from "./listProductsParams";
 export * from "./monthlyCustomerPoint";
 export * from "./product";
 export * from "./productInput";
+export * from "./sheetInfo";
+export * from "./sheetSyncResult";
 export * from "./trafficData";
 export * from "./trafficPoint";
 export * from "./updateCustomerBody";

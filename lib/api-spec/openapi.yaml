@@ -148,6 +148,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/DropOffAnalysis"
 
+  /analytics/sheet-info:
+    get:
+      operationId: getSheetInfo
+      tags: [analytics]
+      summary: Get the linked Google Sheet info (URL and last sync time)
+      responses:
+        "200":
+          description: Sheet info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SheetInfo"
+
+  /analytics/sync-gsheet:
+    post:
+      operationId: syncToGSheet
+      tags: [analytics]
+      summary: Sync current funnel stage data to Google Sheets, creating the sheet if needed
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SheetSyncResult"
+
   # ─── Customers ───────────────────────────────────────────────────────────────
   /customers:
     get:
@@ -593,6 +619,24 @@ components:
         imageUrl:    { type: ["string", "null"] }
         description: { type: ["string", "null"] }
         isNappySub:  { type: boolean }
+
+    # ─── Sheets ──────────────────────────────────────────────────────────────
+    SheetInfo:
+      type: object
+      required: [sheetUrl, spreadsheetId, lastSyncedAt]
+      properties:
+        sheetUrl:      { type: ["string", "null"] }
+        spreadsheetId: { type: ["string", "null"] }
+        lastSyncedAt:  { type: ["string", "null"] }
+
+    SheetSyncResult:
+      type: object
+      required: [sheetUrl, spreadsheetId, syncedAt, rowsWritten]
+      properties:
+        sheetUrl:      { type: string }
+        spreadsheetId: { type: string }
+        syncedAt:      { type: string, format: date-time }
+        rowsWritten:   { type: integer }
 
     # ─── AI ──────────────────────────────────────────────────────────────────
     DiagnoseInput:

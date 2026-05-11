@@ -34,6 +34,8 @@ import type {
   ListProductsParams,
   Product,
   ProductInput,
+  SheetInfo,
+  SheetSyncResult,
   TrafficData,
   UpdateCustomerBody,
 } from "./api.schemas";
@@ -676,6 +678,162 @@ export function useGetDropOffAnalysis<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get the linked Google Sheet info (URL and last sync time)
+ */
+export const getGetSheetInfoUrl = () => {
+  return `/api/analytics/sheet-info`;
+};
+
+export const getSheetInfo = async (
+  options?: RequestInit,
+): Promise<SheetInfo> => {
+  return customFetch<SheetInfo>(getGetSheetInfoUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSheetInfoQueryKey = () => {
+  return [`/api/analytics/sheet-info`] as const;
+};
+
+export const getGetSheetInfoQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSheetInfo>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSheetInfo>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSheetInfoQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSheetInfo>>> = ({
+    signal,
+  }) => getSheetInfo({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSheetInfo>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSheetInfoQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSheetInfo>>
+>;
+export type GetSheetInfoQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the linked Google Sheet info (URL and last sync time)
+ */
+
+export function useGetSheetInfo<
+  TData = Awaited<ReturnType<typeof getSheetInfo>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getSheetInfo>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSheetInfoQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Sync current funnel stage data to Google Sheets, creating the sheet if needed
+ */
+export const getSyncToGSheetUrl = () => {
+  return `/api/analytics/sync-gsheet`;
+};
+
+export const syncToGSheet = async (
+  options?: RequestInit,
+): Promise<SheetSyncResult> => {
+  return customFetch<SheetSyncResult>(getSyncToGSheetUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncToGSheetMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncToGSheet>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncToGSheet>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["syncToGSheet"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncToGSheet>>,
+    void
+  > = () => {
+    return syncToGSheet(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncToGSheetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncToGSheet>>
+>;
+
+export type SyncToGSheetMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Sync current funnel stage data to Google Sheets, creating the sheet if needed
+ */
+export const useSyncToGSheet = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncToGSheet>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof syncToGSheet>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSyncToGSheetMutationOptions(options));
+};
 
 /**
  * @summary List customers with subscription and repeat status

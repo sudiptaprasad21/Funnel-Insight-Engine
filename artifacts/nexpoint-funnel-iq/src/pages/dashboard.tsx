@@ -6,15 +6,20 @@ import {
   getGetDropOffAnalysisQueryKey,
   useGetCustomerTrends,
   getGetCustomerTrendsQueryKey,
-  useDiagnoseFunnel
+  useDiagnoseFunnel,
+  useGetSheetInfo,
+  getGetSheetInfoQueryKey,
+  useSyncToGSheet,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, Activity, BrainCircuit, RefreshCw, TrendingUp } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, Activity, BrainCircuit, RefreshCw, TrendingUp, FileSpreadsheet, ExternalLink, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { FunnelExplainer } from "@/components/FunnelExplainer";
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -50,6 +55,22 @@ export default function DashboardPage() {
       }
     });
   };
+
+  const queryClient = useQueryClient();
+  const { data: sheetInfo } = useGetSheetInfo({
+    query: { queryKey: getGetSheetInfoQueryKey() }
+  });
+  const syncSheet = useSyncToGSheet({
+    mutation: {
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: getGetSheetInfoQueryKey() });
+        toast({ title: "Synced to Google Sheets", description: `${data.rowsWritten} rows written.` });
+      },
+      onError: () => {
+        toast({ title: "Sync Failed", description: "Could not sync to Google Sheets.", variant: "destructive" });
+      },
+    },
+  });
 
   return (
     <DashboardLayout>
@@ -102,6 +123,8 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Funnel Chart Area */}
           <div className="col-span-1 lg:col-span-2 space-y-8">
+            <FunnelExplainer />
+
             <Card>
               <CardHeader>
                 <CardTitle>Funnel Drop-off Analysis</CardTitle>
@@ -186,8 +209,56 @@ export default function DashboardPage() {
             {/* Additional Charts will go here */}
           </div>
 
-          {/* AI Diagnosis Sidebar */}
+          {/* Sidebar */}
           <div className="col-span-1 space-y-6">
+            {/* Google Sheets Export */}
+            <Card className="border-emerald-200/60 bg-emerald-50/30 dark:bg-emerald-950/10">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                  <CardTitle className="text-base">Google Sheets Export</CardTitle>
+                </div>
+                <CardDescription className="text-xs">
+                  Sync live funnel stage data to a Google Sheet for offline analysis or sharing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => syncSheet.mutate({})}
+                  disabled={syncSheet.isPending}
+                  data-testid="button-sync-gsheet"
+                >
+                  {syncSheet.isPending ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  )}
+                  {syncSheet.isPending ? "Syncing…" : "Sync to Sheets"}
+                </Button>
+                {sheetInfo?.lastSyncedAt && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Check className="h-3 w-3 text-emerald-500 shrink-0" />
+                    Last synced: {new Date(sheetInfo.lastSyncedAt).toLocaleString()}
+                  </div>
+                )}
+                {sheetInfo?.sheetUrl && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-emerald-700 hover:text-emerald-800 dark:text-emerald-400"
+                    asChild
+                  >
+                    <a href={sheetInfo.sheetUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                      Open Sheet
+                    </a>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="border-primary/20 shadow-sm bg-primary/5">
               <CardHeader>
                 <div className="flex items-center gap-2 mb-2">
