@@ -259,6 +259,7 @@ export default function DashboardPage() {
                       <CardTitle className="text-base">AI Drop-off Analysis</CardTitle>
                       <CardDescription className="text-xs mt-0.5">
                         AI scans real funnel data to surface likely reasons, testable hypotheses, and an experiment
+                        <br /><em>Powered by GPT-5.2</em>
                       </CardDescription>
                     </div>
                   </div>
