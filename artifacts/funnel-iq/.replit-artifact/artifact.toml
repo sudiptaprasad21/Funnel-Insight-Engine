@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/funnel-iq/"
+previewPath = "/manager-view"
 title = "Funnel IQ Analytics"
 version = "1.0.0"
 id = "artifacts/funnel-iq"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/funnel-iq/" ]
+paths = [ "/manager-view" ]
 localPort = 22323
 
 [services.development]
@@ -28,4 +28,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "22323"
-BASE_PATH = "/funnel-iq/"
+BASE_PATH = "/manager-view"
