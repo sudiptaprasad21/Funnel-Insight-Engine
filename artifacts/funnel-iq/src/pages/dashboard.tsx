@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info } from "lucide-react";
 
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -570,7 +570,10 @@ export default function DashboardPage() {
 
                       {/* How to read — methodology note */}
                       <div className="rounded-xl border border-blue-200/60 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-3">
-                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">How to Read "Conversion Rate Cards"?</p>
+                        <div className="flex items-center gap-2">
+                          <Info className="h-4 w-4 text-blue-500 shrink-0" />
+                          <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">How to Read "Conversion Rate Cards"?</p>
+                        </div>
                         <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                           <p>
                             <span className="font-semibold">These cards count events, not sessions.</span>{" "}
