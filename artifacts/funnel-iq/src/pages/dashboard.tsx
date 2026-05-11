@@ -538,8 +538,8 @@ export default function DashboardPage() {
                                 <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />{b.healthy}</span>
                                 <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />{b.watch}</span>
                                 <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500 inline-block" />{b.poor}</span>
-                                <span className="text-slate-400 italic">({b.note})</span>
                               </div>
+                              <p className="text-[11px] text-slate-400 italic">({b.note})</p>
                             </div>
                           ))}
                         </div>
