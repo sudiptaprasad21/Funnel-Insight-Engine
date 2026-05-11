@@ -1,3 +1,5 @@
+import { getStoredCustomerId } from "./auth";
+
 export interface CartItem {
   productId: number;
   name: string;
@@ -17,19 +19,26 @@ export interface WishlistItem {
   category: string;
 }
 
-const CART_KEY = "hm_cart";
-const WISHLIST_KEY = "hm_wishlist";
+function cartKey(): string {
+  const id = getStoredCustomerId();
+  return id != null ? `hm_cart_${id}` : "hm_cart_anon";
+}
+
+function wishlistKey(): string {
+  const id = getStoredCustomerId();
+  return id != null ? `hm_wishlist_${id}` : "hm_wishlist_anon";
+}
 
 export function getCart(): CartItem[] {
   try {
-    return JSON.parse(localStorage.getItem(CART_KEY) ?? "[]");
+    return JSON.parse(localStorage.getItem(cartKey()) ?? "[]");
   } catch {
     return [];
   }
 }
 
 export function saveCart(cart: CartItem[]): void {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  localStorage.setItem(cartKey(), JSON.stringify(cart));
 }
 
 export function addToCart(item: Omit<CartItem, "quantity">): CartItem[] {
@@ -59,7 +68,7 @@ export function updateCartQty(productId: number, quantity: number): CartItem[] {
 }
 
 export function clearCart(): void {
-  localStorage.removeItem(CART_KEY);
+  localStorage.removeItem(cartKey());
 }
 
 export function getCartCount(): number {
@@ -68,14 +77,14 @@ export function getCartCount(): number {
 
 export function getWishlist(): WishlistItem[] {
   try {
-    return JSON.parse(localStorage.getItem(WISHLIST_KEY) ?? "[]");
+    return JSON.parse(localStorage.getItem(wishlistKey()) ?? "[]");
   } catch {
     return [];
   }
 }
 
 export function saveWishlist(items: WishlistItem[]): void {
-  localStorage.setItem(WISHLIST_KEY, JSON.stringify(items));
+  localStorage.setItem(wishlistKey(), JSON.stringify(items));
 }
 
 export function addToWishlist(item: WishlistItem): WishlistItem[] {
