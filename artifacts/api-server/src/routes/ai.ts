@@ -123,16 +123,28 @@ Provide 4–6 drop-off reasons (covering the highest-loss stages), exactly 3 hyp
     const raw = completion.choices[0]?.message?.content ?? "{}";
     const parsed_result = JSON.parse(raw);
 
+    const experiment = parsed_result.suggestedExperiment ?? {
+      title: "Reduce checkout friction",
+      hypothesis: "If we simplify the checkout flow, then purchase completion will increase because fewer steps reduces abandonment.",
+      expectedImpact: "+10% checkout completion",
+      effort: "medium",
+    };
+
+    // Persist the suggested experiment so it appears in the experiments table
+    await db.insert(experimentsTable).values({
+      title: experiment.title,
+      hypothesis: experiment.hypothesis,
+      expectedImpact: experiment.expectedImpact,
+      effort: experiment.effort ?? "medium",
+      funnelStage: parsed_result.topDropOffStage ?? topDropOffStage,
+      status: "proposed",
+    });
+
     res.json(AnalyzeDropOffResponse.parse({
       topDropOffStage: parsed_result.topDropOffStage ?? topDropOffStage,
       dropOffReasons: parsed_result.dropOffReasons ?? [],
       hypotheses: parsed_result.hypotheses ?? [],
-      suggestedExperiment: parsed_result.suggestedExperiment ?? {
-        title: "Reduce checkout friction",
-        hypothesis: "If we simplify the checkout flow, then purchase completion will increase because fewer steps reduces abandonment.",
-        expectedImpact: "+10% checkout completion",
-        effort: "medium",
-      },
+      suggestedExperiment: experiment,
       generatedAt: new Date().toISOString(),
     }));
   } catch (err) {
