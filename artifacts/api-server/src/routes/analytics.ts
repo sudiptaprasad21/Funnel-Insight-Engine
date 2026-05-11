@@ -275,22 +275,22 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const subscribed         = sessionSet(["subscribed"]);
 
   const stages = [
-    // ── Shared entry ───────────────────────────────────────────────────────────
+    // ── Purchase path ──────────────────────────────────────────────────────────
     { stage: "Landing Page View",    users: pageViews,           dropOff: 0, dropOffRate: 0 },
     { stage: "Banner Click",         users: bannerClicks,        dropOff: 0, dropOffRate: 0 },
     { stage: "Product View",         users: productViews,        dropOff: 0, dropOffRate: 0 },
     { stage: "Product Detail View",  users: productDetailViews,  dropOff: 0, dropOffRate: 0 },
-    // ── Subscription path branches off here ───────────────────────────────────
-    { stage: "Subscription Intent",  users: subscriptionIntents, dropOff: 0, dropOffRate: 0 },
-    { stage: "Subscribed",           users: subscribed,          dropOff: 0, dropOffRate: 0 },
-    // ── Purchase path continues from Product Detail View ──────────────────────
     { stage: "Wishlist Save",        users: addToWishlist,       dropOff: 0, dropOffRate: 0 },
     { stage: "Add to Cart",          users: addToCart,           dropOff: 0, dropOffRate: 0 },
     { stage: "Checkout",             users: checkouts,           dropOff: 0, dropOffRate: 0 },
     { stage: "Purchased",            users: purchases,           dropOff: 0, dropOffRate: 0 },
+    // ── Subscription path (parallel to purchase path) ─────────────────────────
+    { stage: "Subscription Intent",  users: subscriptionIntents, dropOff: 0, dropOffRate: 0 },
+    { stage: "Subscribed",           users: subscribed,          dropOff: 0, dropOffRate: 0 },
   ];
 
-  // Calculate drop-off between consecutive stages — clamp to 0 for non-monotonic funnels.
+  // Calculate drop-off between stages — clamp to 0 (non-monotonic funnels
+  // arise when users skip optional stages like the banner or cart)
   for (let i = 0; i < stages.length - 1; i++) {
     const raw = stages[i].users - stages[i + 1].users;
     const dropOff = Math.max(0, raw);
@@ -301,15 +301,15 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
         : 0;
   }
 
-  // Product Detail View → Subscription Intent: these are parallel paths, not sequential.
-  // Drop-off here is meaningless so we suppress it.
-  const detailIdx = stages.findIndex((s) => s.stage === "Product Detail View");
-  if (detailIdx >= 0) {
-    stages[detailIdx].dropOff = 0;
-    stages[detailIdx].dropOffRate = 0;
+  // Purchased is a terminal stage on the purchase path — the subscription path
+  // is parallel, not sequential, so no drop-off is shown here.
+  const purchasedIdx = stages.findIndex((s) => s.stage === "Purchased");
+  if (purchasedIdx >= 0) {
+    stages[purchasedIdx].dropOff = 0;
+    stages[purchasedIdx].dropOffRate = 0;
   }
 
-  // Subscription Intent: true drop-off = sessions with intent that never subscribed.
+  // Subscription Intent: true drop-off = sessions that had intent but never subscribed.
   const subIntentIdx = stages.findIndex((s) => s.stage === "Subscription Intent");
   if (subIntentIdx >= 0) {
     const intents = stages[subIntentIdx].users;
@@ -319,26 +319,18 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
       intents > 0 ? parseFloat(((trueDropOff / intents) * 100).toFixed(1)) : 0;
   }
 
-  // Subscribed → Wishlist Save: end of subscription path; Wishlist is a different path.
-  // Suppress cross-path drop-off.
+  // Subscribed is a terminal conversion stage — no further step to drop off to.
   const subscribedIdx = stages.findIndex((s) => s.stage === "Subscribed");
   if (subscribedIdx >= 0) {
     stages[subscribedIdx].dropOff = 0;
     stages[subscribedIdx].dropOffRate = 0;
   }
 
-  // Purchased is a terminal stage on the purchase path — nothing comes after.
-  const purchasedIdx = stages.findIndex((s) => s.stage === "Purchased");
-  if (purchasedIdx >= 0) {
-    stages[purchasedIdx].dropOff = 0;
-    stages[purchasedIdx].dropOffRate = 0;
-  }
-
-  // Exclude terminal/boundary stages from top drop-off ranking.
-  const suppressedStages = new Set(["Product Detail View", "Subscribed", "Purchased"]);
+  // Exclude terminal stages (Purchased, Subscribed) from top drop-off ranking.
+  const terminalStages = new Set(["Purchased", "Subscribed"]);
   const topDropOffStage =
     stages
-      .filter((s) => !suppressedStages.has(s.stage))
+      .filter((s) => !terminalStages.has(s.stage))
       .sort((a, b) => b.dropOff - a.dropOff)[0]?.stage ??
     "Banner Click";
 
