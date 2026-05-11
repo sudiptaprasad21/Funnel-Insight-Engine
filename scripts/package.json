@@ -9,11 +9,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "pg": "catalog:"
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "@types/pg": "catalog:",
+    "@types/pg": "^8.10.11",
     "tsx": "catalog:"
   }
 }

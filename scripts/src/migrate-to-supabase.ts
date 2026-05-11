@@ -1,9 +1,8 @@
 /**
  * migrate-to-supabase.ts
  *
- * Migrates all data from the Replit Postgres DB to Supabase.
- * Run AFTER setting SUPABASE_DATABASE_URL as a secret and AFTER
- * `pnpm --filter @workspace/db run push` has applied the schema to Supabase.
+ * Creates the full schema on Supabase and migrates all data from the Replit DB.
+ * Safe to re-run: uses CREATE TABLE IF NOT EXISTS and ON CONFLICT DO NOTHING/UPDATE.
  *
  * Usage: pnpm --filter @workspace/scripts run migrate-to-supabase
  */
@@ -20,9 +19,7 @@ if (!SOURCE_URL) {
   process.exit(1);
 }
 if (!TARGET_URL) {
-  console.error(
-    "Error: SUPABASE_DATABASE_URL is not set. Please add it as a secret first.",
-  );
+  console.error("Error: SUPABASE_DATABASE_URL is not set.");
   process.exit(1);
 }
 
@@ -32,156 +29,193 @@ const target = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-async function run() {
-  console.log("Starting migration: Replit DB → Supabase\n");
+const SCHEMA_SQL = `
+CREATE TABLE IF NOT EXISTS products (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  category    TEXT NOT NULL,
+  price       REAL NOT NULL,
+  sale_price  REAL,
+  on_sale     BOOLEAN NOT NULL DEFAULT FALSE,
+  image_url   TEXT,
+  description TEXT,
+  is_nappy_sub BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-  const src = await source.connect();
+CREATE TABLE IF NOT EXISTS customers (
+  id                SERIAL PRIMARY KEY,
+  name              TEXT NOT NULL,
+  email             TEXT NOT NULL UNIQUE,
+  is_repeat         BOOLEAN NOT NULL DEFAULT FALSE,
+  is_subscribed     BOOLEAN NOT NULL DEFAULT FALSE,
+  subscription_days INTEGER,
+  subscription_plan TEXT,
+  total_orders      INTEGER NOT NULL DEFAULT 0,
+  total_spend       REAL NOT NULL DEFAULT 0,
+  source            TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS funnel_events (
+  id          SERIAL PRIMARY KEY,
+  event_type  TEXT NOT NULL,
+  session_id  TEXT NOT NULL,
+  customer_id INTEGER,
+  product_id  INTEGER,
+  metadata    TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS experiments (
+  id              SERIAL PRIMARY KEY,
+  title           TEXT NOT NULL,
+  hypothesis      TEXT NOT NULL,
+  expected_impact TEXT NOT NULL,
+  effort          TEXT NOT NULL DEFAULT 'medium',
+  funnel_stage    TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'proposed',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ,
+  merge_note      TEXT
+);
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+`;
+
+async function run() {
+  console.log("=== Supabase Migration ===\n");
+
   const tgt = await target.connect();
+  const src = await source.connect();
 
   try {
-    // ── 1. products ────────────────────────────────────────────────────────
-    console.log("Migrating products…");
-    const products = await src.query(
-      "SELECT id, name, category, price, sale_price, on_sale, image_url, description, is_nappy_sub, created_at FROM products ORDER BY id",
-    );
-    if (products.rows.length > 0) {
+    // ── Step 1: Create schema ──────────────────────────────────────────────
+    console.log("Step 1/3 — Creating schema on Supabase…");
+    await tgt.query(SCHEMA_SQL);
+    console.log("  ✓ All tables created (or already exist)\n");
+
+    // ── Step 2: Migrate data ───────────────────────────────────────────────
+    console.log("Step 2/3 — Migrating data…\n");
+
+    // products
+    {
+      const { rows } = await src.query(
+        "SELECT id,name,category,price,sale_price,on_sale,image_url,description,is_nappy_sub,created_at FROM products ORDER BY id",
+      );
       await tgt.query("BEGIN");
-      for (const r of products.rows) {
+      for (const r of rows) {
         await tgt.query(
-          `INSERT INTO products (id, name, category, price, sale_price, on_sale, image_url, description, is_nappy_sub, created_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-           ON CONFLICT (id) DO NOTHING`,
-          [r.id, r.name, r.category, r.price, r.sale_price, r.on_sale, r.image_url, r.description, r.is_nappy_sub, r.created_at],
+          `INSERT INTO products(id,name,category,price,sale_price,on_sale,image_url,description,is_nappy_sub,created_at)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(id) DO NOTHING`,
+          [r.id,r.name,r.category,r.price,r.sale_price,r.on_sale,r.image_url,r.description,r.is_nappy_sub,r.created_at],
         );
       }
       await tgt.query("COMMIT");
-      await tgt.query(
-        "SELECT setval('products_id_seq', (SELECT MAX(id) FROM products))",
-      );
-      console.log(`  ✓ ${products.rows.length} products`);
-    } else {
-      console.log("  (no products to migrate)");
+      if (rows.length) {
+        await tgt.query("SELECT setval('products_id_seq',(SELECT MAX(id) FROM products))");
+      }
+      console.log(`  products       → ${rows.length} rows`);
     }
 
-    // ── 2. customers ───────────────────────────────────────────────────────
-    console.log("Migrating customers…");
-    const customers = await src.query(
-      "SELECT id, name, email, is_repeat, is_subscribed, subscription_days, subscription_plan, total_orders, total_spend, source, created_at FROM customers ORDER BY id",
-    );
-    if (customers.rows.length > 0) {
+    // customers
+    {
+      const { rows } = await src.query(
+        "SELECT id,name,email,is_repeat,is_subscribed,subscription_days,subscription_plan,total_orders,total_spend,source,created_at FROM customers ORDER BY id",
+      );
       await tgt.query("BEGIN");
-      for (const r of customers.rows) {
+      for (const r of rows) {
         await tgt.query(
-          `INSERT INTO customers (id, name, email, is_repeat, is_subscribed, subscription_days, subscription_plan, total_orders, total_spend, source, created_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-           ON CONFLICT (id) DO NOTHING`,
-          [r.id, r.name, r.email, r.is_repeat, r.is_subscribed, r.subscription_days, r.subscription_plan, r.total_orders, r.total_spend, r.source, r.created_at],
+          `INSERT INTO customers(id,name,email,is_repeat,is_subscribed,subscription_days,subscription_plan,total_orders,total_spend,source,created_at)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT(id) DO NOTHING`,
+          [r.id,r.name,r.email,r.is_repeat,r.is_subscribed,r.subscription_days,r.subscription_plan,r.total_orders,r.total_spend,r.source,r.created_at],
         );
       }
       await tgt.query("COMMIT");
-      await tgt.query(
-        "SELECT setval('customers_id_seq', (SELECT MAX(id) FROM customers))",
-      );
-      console.log(`  ✓ ${customers.rows.length} customers`);
-    } else {
-      console.log("  (no customers to migrate)");
+      if (rows.length) {
+        await tgt.query("SELECT setval('customers_id_seq',(SELECT MAX(id) FROM customers))");
+      }
+      console.log(`  customers      → ${rows.length} rows`);
     }
 
-    // ── 3. funnel_events ───────────────────────────────────────────────────
-    console.log("Migrating funnel_events…");
-    const events = await src.query(
-      "SELECT id, event_type, session_id, customer_id, product_id, metadata, created_at FROM funnel_events ORDER BY id",
-    );
-    if (events.rows.length > 0) {
-      // Insert in chunks of 100 to avoid oversized transactions
+    // funnel_events — chunked to avoid very large transactions
+    {
+      const { rows } = await src.query(
+        "SELECT id,event_type,session_id,customer_id,product_id,metadata,created_at FROM funnel_events ORDER BY id",
+      );
       const CHUNK = 100;
-      let total = 0;
-      for (let i = 0; i < events.rows.length; i += CHUNK) {
-        const chunk = events.rows.slice(i, i + CHUNK);
+      for (let i = 0; i < rows.length; i += CHUNK) {
+        const chunk = rows.slice(i, i + CHUNK);
         await tgt.query("BEGIN");
         for (const r of chunk) {
           await tgt.query(
-            `INSERT INTO funnel_events (id, event_type, session_id, customer_id, product_id, metadata, created_at)
-             VALUES ($1,$2,$3,$4,$5,$6,$7)
-             ON CONFLICT (id) DO NOTHING`,
-            [r.id, r.event_type, r.session_id, r.customer_id, r.product_id, r.metadata, r.created_at],
+            `INSERT INTO funnel_events(id,event_type,session_id,customer_id,product_id,metadata,created_at)
+             VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING`,
+            [r.id,r.event_type,r.session_id,r.customer_id,r.product_id,r.metadata,r.created_at],
           );
         }
         await tgt.query("COMMIT");
-        total += chunk.length;
-        process.stdout.write(`\r  inserting… ${total}/${events.rows.length}`);
       }
-      await tgt.query(
-        "SELECT setval('funnel_events_id_seq', (SELECT MAX(id) FROM funnel_events))",
-      );
-      console.log(`\n  ✓ ${events.rows.length} funnel_events`);
-    } else {
-      console.log("  (no events to migrate)");
+      if (rows.length) {
+        await tgt.query("SELECT setval('funnel_events_id_seq',(SELECT MAX(id) FROM funnel_events))");
+      }
+      console.log(`  funnel_events  → ${rows.length} rows`);
     }
 
-    // ── 4. experiments ─────────────────────────────────────────────────────
-    console.log("Migrating experiments…");
-    const experiments = await src.query(
-      "SELECT id, title, hypothesis, expected_impact, effort, funnel_stage, status, created_at, updated_at, merge_note FROM experiments ORDER BY id",
-    );
-    if (experiments.rows.length > 0) {
+    // experiments
+    {
+      const { rows } = await src.query(
+        "SELECT id,title,hypothesis,expected_impact,effort,funnel_stage,status,created_at,updated_at,merge_note FROM experiments ORDER BY id",
+      );
       await tgt.query("BEGIN");
-      for (const r of experiments.rows) {
+      for (const r of rows) {
         await tgt.query(
-          `INSERT INTO experiments (id, title, hypothesis, expected_impact, effort, funnel_stage, status, created_at, updated_at, merge_note)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-           ON CONFLICT (id) DO NOTHING`,
-          [r.id, r.title, r.hypothesis, r.expected_impact, r.effort, r.funnel_stage, r.status, r.created_at, r.updated_at, r.merge_note],
+          `INSERT INTO experiments(id,title,hypothesis,expected_impact,effort,funnel_stage,status,created_at,updated_at,merge_note)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT(id) DO NOTHING`,
+          [r.id,r.title,r.hypothesis,r.expected_impact,r.effort,r.funnel_stage,r.status,r.created_at,r.updated_at,r.merge_note],
         );
       }
       await tgt.query("COMMIT");
-      await tgt.query(
-        "SELECT setval('experiments_id_seq', (SELECT MAX(id) FROM experiments))",
-      );
-      console.log(`  ✓ ${experiments.rows.length} experiments`);
-    } else {
-      console.log("  (no experiments to migrate)");
+      if (rows.length) {
+        await tgt.query("SELECT setval('experiments_id_seq',(SELECT MAX(id) FROM experiments))");
+      }
+      console.log(`  experiments    → ${rows.length} rows`);
     }
 
-    // ── 5. app_settings ────────────────────────────────────────────────────
-    console.log("Migrating app_settings…");
-    const settings = await src.query(
-      "SELECT key, value, updated_at FROM app_settings",
-    );
-    if (settings.rows.length > 0) {
+    // app_settings
+    {
+      const { rows } = await src.query("SELECT key,value,updated_at FROM app_settings");
       await tgt.query("BEGIN");
-      for (const r of settings.rows) {
+      for (const r of rows) {
         await tgt.query(
-          `INSERT INTO app_settings (key, value, updated_at)
-           VALUES ($1,$2,$3)
-           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at`,
-          [r.key, r.value, r.updated_at],
+          `INSERT INTO app_settings(key,value,updated_at) VALUES($1,$2,$3)
+           ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value, updated_at=EXCLUDED.updated_at`,
+          [r.key,r.value,r.updated_at],
         );
       }
       await tgt.query("COMMIT");
-      console.log(`  ✓ ${settings.rows.length} app_settings rows`);
-    } else {
-      console.log("  (no settings to migrate)");
+      console.log(`  app_settings   → ${rows.length} rows`);
     }
 
-    console.log("\nMigration complete. Verifying row counts in Supabase…\n");
-
-    const checks = [
-      "funnel_events",
-      "customers",
-      "products",
-      "experiments",
-      "app_settings",
-    ];
-    for (const table of checks) {
-      const srcCount = await src.query(`SELECT COUNT(*) FROM ${table}`);
-      const tgtCount = await tgt.query(`SELECT COUNT(*) FROM ${table}`);
-      const match =
-        srcCount.rows[0].count === tgtCount.rows[0].count ? "✓" : "✗ MISMATCH";
-      console.log(
-        `  ${match}  ${table}: source=${srcCount.rows[0].count}  supabase=${tgtCount.rows[0].count}`,
-      );
+    // ── Step 3: Verify counts match ───────────────────────────────────────
+    console.log("\nStep 3/3 — Verifying row counts…\n");
+    const tables = ["funnel_events","customers","products","experiments","app_settings"];
+    let allOk = true;
+    for (const table of tables) {
+      const srcRes = await src.query(`SELECT COUNT(*) FROM ${table}`);
+      const tgtRes = await tgt.query(`SELECT COUNT(*) FROM ${table}`);
+      const srcN = parseInt(srcRes.rows[0].count, 10);
+      const tgtN = parseInt(tgtRes.rows[0].count, 10);
+      const ok = srcN === tgtN;
+      if (!ok) allOk = false;
+      console.log(`  ${ok ? "✓" : "✗ MISMATCH"}  ${table.padEnd(18)} source=${srcN}  supabase=${tgtN}`);
     }
+
+    console.log(allOk ? "\n✓ Migration successful — all counts match." : "\n✗ Some counts differ — check the output above.");
   } finally {
     src.release();
     tgt.release();

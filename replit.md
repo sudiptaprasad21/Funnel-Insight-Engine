@@ -10,7 +10,8 @@ AI-assisted marketing funnel drop-off diagnosis tool with a trackable Happy Mom 
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `SUPABASE_DATABASE_URL` — Supabase Postgres connection string (primary DB, dev + prod)
+- Required env: `DATABASE_URL` — Replit fallback DB (used automatically if SUPABASE_DATABASE_URL is absent)
 - Required env: `SESSION_SECRET` — Express session secret
 - Required env: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY` — Replit AI proxy for OpenAI
 
@@ -35,6 +36,15 @@ AI-assisted marketing funnel drop-off diagnosis tool with a trackable Happy Mom 
 - `artifacts/nexpoint-funnel-iq/src/pages/` — React pages (landing, dashboard, customers, products)
 - `artifacts/nexpoint-funnel-iq/src/lib/tracking.ts` — event tracking utility for the demo store
 
+## Database
+
+- **Primary DB**: Supabase PostgreSQL (`SUPABASE_DATABASE_URL` secret, shared across dev and production)
+- **Fallback**: Replit managed DB (`DATABASE_URL`) — used only if `SUPABASE_DATABASE_URL` is unset
+- **Connection**: `lib/db/src/index.ts` prefers `SUPABASE_DATABASE_URL`; SSL is enabled automatically for Supabase
+- **Schema push**: `pnpm --filter @workspace/db run push` — reads `SUPABASE_DATABASE_URL` first via `drizzle.config.ts`
+- **Data migration**: `pnpm --filter @workspace/scripts run migrate-to-supabase` — creates schema + copies all rows from Replit DB to Supabase (idempotent, safe to re-run)
+- **Published app**: Reads `SUPABASE_DATABASE_URL` secret automatically — no extra configuration needed after publishing
+
 ## Architecture decisions
 
 - **Contract-first API**: OpenAPI spec drives all type generation via Orval. Never hand-write API types.
@@ -58,7 +68,7 @@ AI-assisted marketing funnel drop-off diagnosis tool with a trackable Happy Mom 
 ## Gotchas
 
 - After changing any route file, restart the `artifacts/api-server: API Server` workflow — the server builds to `dist/` on startup.
-- After changing `lib/db/src/schema/`, run `pnpm --filter @workspace/db run push` to apply migrations.
+- After changing `lib/db/src/schema/`, run `pnpm --filter @workspace/db run push` to apply migrations to Supabase.
 - After changing `lib/api-spec/openapi.yaml`, run `pnpm --filter @workspace/api-spec run codegen` to regenerate hooks and Zod schemas.
 - `reviews.customerId` and `reviews.productId` are nullable in the DB schema (despite the OpenAPI spec requiring them for the POST body).
 - Do not run `pnpm dev` at the workspace root — use the workflow system.
