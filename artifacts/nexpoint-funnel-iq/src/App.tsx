@@ -7,9 +7,6 @@ import LandingPage from "@/pages/landing";
 import AuthPage from "@/pages/auth";
 import CartPage from "@/pages/cart";
 import WishlistPage from "@/pages/wishlist";
-import DashboardPage from "@/pages/dashboard";
-import CustomersPage from "@/pages/customers";
-import ProductsPage from "@/pages/products";
 
 const queryClient = new QueryClient();
 
@@ -19,9 +16,6 @@ function Router() {
       <Route path="/login" component={AuthPage} />
       <Route path="/cart" component={CartPage} />
       <Route path="/wishlist" component={WishlistPage} />
-      <Route path="/dashboard" component={DashboardPage} />
-      <Route path="/customers" component={CustomersPage} />
-      <Route path="/products" component={ProductsPage} />
       <Route path="/" component={LandingPage} />
       <Route component={NotFound} />
     </Switch>
