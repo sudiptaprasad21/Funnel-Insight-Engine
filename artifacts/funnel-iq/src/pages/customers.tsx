@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, RefreshCw, Repeat2, ExternalLink } from "lucide-react";
+import { Users, RefreshCw, Repeat2, ExternalLink, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -43,6 +43,18 @@ export default function CustomersPage() {
 
   const [lastCustomerSynced, setLastCustomerSynced] = useState<string | null>(null);
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
+  const [filterStatus, setFilterStatus] = useState<"all" | "new" | "repeat" | "subscribed">("all");
+  const [sortField, setSortField] = useState<"name" | "orders" | "spend" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  function toggleSort(field: "name" | "orders" | "spend") {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }
 
   const chartData = useMemo(() => {
     if (!customers) return [];
@@ -110,6 +122,27 @@ export default function CustomersPage() {
       };
     });
   }, [period, customers]);
+
+  const filteredCustomers = useMemo(() => {
+    if (!customers) return [];
+    let list = [...customers];
+    if (filterStatus === "new") list = list.filter((c) => !c.isRepeat && !c.isSubscribed);
+    else if (filterStatus === "repeat") list = list.filter((c) => c.isRepeat);
+    else if (filterStatus === "subscribed") list = list.filter((c) => c.isSubscribed);
+    if (sortField) {
+      list.sort((a, b) => {
+        let aVal: number | string = 0;
+        let bVal: number | string = 0;
+        if (sortField === "name") { aVal = a.name?.toLowerCase() ?? ""; bVal = b.name?.toLowerCase() ?? ""; }
+        else if (sortField === "orders") { aVal = a.totalOrders ?? 0; bVal = b.totalOrders ?? 0; }
+        else if (sortField === "spend") { aVal = Number(a.totalSpend ?? 0); bVal = Number(b.totalSpend ?? 0); }
+        if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return list;
+  }, [customers, filterStatus, sortField, sortDir]);
 
   const syncCustomers = useSyncCustomersToGSheet({
     mutation: {
@@ -320,6 +353,26 @@ export default function CustomersPage() {
             </p>
           </CardHeader>
           <CardContent>
+            {/* Filter pills */}
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              {(["all", "new", "repeat", "subscribed"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    filterStatus === s
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {s === "all" ? "All" : s === "new" ? "New" : s === "repeat" ? "Repeat" : "Subscribed"}
+                </button>
+              ))}
+              <span className="ml-auto text-xs text-muted-foreground">
+                {filteredCustomers.length} customer{filteredCustomers.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+
             {customersLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -331,16 +384,58 @@ export default function CustomersPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Name</th>
+                      <th className="text-left py-3 px-4 font-semibold text-muted-foreground">
+                        <button
+                          onClick={() => toggleSort("name")}
+                          className="flex items-center gap-1 hover:text-foreground transition-colors"
+                        >
+                          Name
+                          {sortField === "name" ? (
+                            sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                          ) : (
+                            <ChevronsUpDown className="h-3 w-3 opacity-40" />
+                          )}
+                        </button>
+                      </th>
                       <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Email</th>
                       <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Source</th>
-                      <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Orders</th>
-                      <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Spend</th>
+                      <th className="text-right py-3 px-4 font-semibold text-muted-foreground">
+                        <button
+                          onClick={() => toggleSort("orders")}
+                          className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors"
+                        >
+                          Orders
+                          {sortField === "orders" ? (
+                            sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                          ) : (
+                            <ChevronsUpDown className="h-3 w-3 opacity-40" />
+                          )}
+                        </button>
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-muted-foreground">
+                        <button
+                          onClick={() => toggleSort("spend")}
+                          className="flex items-center gap-1 ml-auto hover:text-foreground transition-colors"
+                        >
+                          Spend
+                          {sortField === "spend" ? (
+                            sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                          ) : (
+                            <ChevronsUpDown className="h-3 w-3 opacity-40" />
+                          )}
+                        </button>
+                      </th>
                       <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {customers?.map((customer) => (
+                    {filteredCustomers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center text-muted-foreground text-sm">
+                          No customers match this filter
+                        </td>
+                      </tr>
+                    ) : filteredCustomers.map((customer) => (
                       <tr key={customer.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="py-3 px-4 font-medium">{customer.name}</td>
                         <td className="py-3 px-4 text-muted-foreground">{customer.email}</td>
