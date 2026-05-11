@@ -377,42 +377,36 @@ router.get("/analytics/sheet-info", async (req, res): Promise<void> => {
 
 // ─── Sync Funnel Data to Google Sheets ────────────────────────────────────────
 router.post("/analytics/sync-gsheet", async (req, res): Promise<void> => {
-  const eventCounts = await db
-    .select({
-      eventType: funnelEventsTable.eventType,
-      sessions: sql<number>`count(distinct ${funnelEventsTable.sessionId})`,
-    })
-    .from(funnelEventsTable)
-    .groupBy(funnelEventsTable.eventType);
+  // Fetch all events and use the same sessionSet logic as the drop-off dashboard
+  // so the sheet values are always identical to what the bar chart shows.
+  const events = await db.select().from(funnelEventsTable);
 
-  const countMap: Record<string, number> = {};
-  for (const row of eventCounts) {
-    countMap[row.eventType] = row.sessions;
-  }
+  const sessionSet = (types: string[]) =>
+    new Set(events.filter((e) => types.includes(e.eventType)).map((e) => e.sessionId)).size;
 
-  const totalVisitors = Math.max(countMap["page_view"] ?? 0, 1);
+  const totalVisitors = new Set(events.map((e) => e.sessionId)).size;
+  const totalVisitorsSafe = Math.max(totalVisitors, 1);
 
   const STAGES = [
-    { name: "Landing Page",        key: "page_view" },
-    { name: "Banner Click",        key: "banner_click" },
-    { name: "Product View",        key: "product_view" },
-    { name: "Product Detail View", key: "product_detail_view" },
-    { name: "Add to Wishlist",     key: "add_to_wishlist" },
-    { name: "Add to Cart",         key: "add_to_cart" },
-    { name: "Checkout / Purchased", key: "checkout_start" },
-    { name: "Subscription Intent", key: "intended_subscription" },
-    { name: "Subscribed",          key: "subscribed" },
+    { name: "Landing Page View",    users: totalVisitors },
+    { name: "Banner Click",         users: sessionSet(["banner_click"]) },
+    { name: "Product View",         users: sessionSet(["product_view", "sale_item_view", "browse_only"]) },
+    { name: "Product Detail View",  users: sessionSet(["product_detail_view"]) },
+    { name: "Wishlist Save",        users: sessionSet(["add_to_wishlist"]) },
+    { name: "Add to Cart",          users: sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]) },
+    { name: "Checkout / Purchased", users: sessionSet(["checkout_start", "purchase"]) },
+    { name: "Subscription Intent",  users: sessionSet(["intended_subscription"]) },
+    { name: "Subscribed",           users: sessionSet(["subscribed"]) },
   ];
 
   const now = new Date().toISOString();
 
   const headers = ["Stage", "Sessions", "% of Visitors", "Drop-off vs Previous", "Synced At"];
   const dataRows: (string | number)[][] = STAGES.map((stage, i) => {
-    const sessions = countMap[stage.key] ?? 0;
-    const pct = ((sessions / totalVisitors) * 100).toFixed(1);
-    const prev = i > 0 ? (countMap[STAGES[i - 1]!.key] ?? 0) : totalVisitors;
-    const dropOff = prev > sessions ? prev - sessions : 0;
-    return [stage.name, sessions, `${pct}%`, dropOff, now];
+    const pct = ((stage.users / totalVisitorsSafe) * 100).toFixed(1);
+    const prev = i > 0 ? STAGES[i - 1]!.users : totalVisitors;
+    const dropOff = prev > stage.users ? prev - stage.users : 0;
+    return [stage.name, stage.users, `${pct}%`, dropOff, now];
   });
 
   const rows: (string | number)[][] = [headers, ...dataRows];
@@ -461,7 +455,8 @@ router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void>
 
   const totalVisitors  = new Set(events.map((e) => e.sessionId)).size;
   const productViews   = countByType("product_view") + countByType("sale_item_view") + countByType("browse_only");
-  const addToCart      = sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]);
+  // Match funnel-summary exactly: raw event count, no checkout_start/purchase
+  const addToCart      = countByType("add_to_cart") + countByType("wishlist_to_cart");
   const addToWishlist  = events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata !== '{"action":"remove"}').length;
   const wishlistToCart = countByType("wishlist_to_cart");
   const purchases      = countByType("purchase");
