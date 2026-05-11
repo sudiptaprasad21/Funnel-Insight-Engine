@@ -321,9 +321,11 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
     },
   ];
 
-  // Calculate drop-off between stages
+  // Calculate drop-off between stages — clamp to 0 (non-monotonic funnels
+  // arise when users skip optional stages like the banner or cart)
   for (let i = 0; i < stages.length - 1; i++) {
-    const dropOff = stages[i].users - stages[i + 1].users;
+    const raw = stages[i].users - stages[i + 1].users;
+    const dropOff = Math.max(0, raw);
     stages[i].dropOff = dropOff;
     stages[i].dropOffRate =
       stages[i].users > 0

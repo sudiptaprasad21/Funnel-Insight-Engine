@@ -110,29 +110,71 @@ export default function DashboardPage() {
               <CardContent>
                 {dropOffLoading ? (
                   <Skeleton className="h-[300px] w-full" />
-                ) : dropOff ? (
-                  <div className="space-y-6">
-                    {dropOff.stages.map((stage, i) => (
-                      <div key={stage.stage} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium capitalize">{stage.stage.replace('_', ' ')}</span>
-                          <span className="text-muted-foreground">{stage.users} users</span>
-                        </div>
-                        <div className="h-4 bg-secondary rounded-full overflow-hidden flex">
-                          <div 
-                            className="bg-primary h-full transition-all"
-                            style={{ width: `${(stage.users / dropOff.stages[0].users) * 100}%` }}
-                          />
-                        </div>
-                        {i < dropOff.stages.length - 1 && (
-                          <div className="text-xs text-destructive text-right">
-                            {(stage.dropOffRate ?? 0).toFixed(1)}% drop-off
+                ) : dropOff ? (() => {
+                  const top = dropOff.stages[0]?.users ?? 1;
+                  const barColors = [
+                    "bg-blue-500", "bg-blue-400", "bg-indigo-500", "bg-indigo-400",
+                    "bg-violet-500", "bg-violet-400", "bg-amber-500", "bg-emerald-500",
+                  ];
+                  return (
+                    <div className="space-y-0.5">
+                      {dropOff.stages.map((stage, i) => {
+                        const next = dropOff.stages[i + 1];
+                        const isLast = i === dropOff.stages.length - 1;
+                        const hasUsers = stage.users > 0;
+                        const pct = top > 0 ? (stage.users / top) * 100 : 0;
+                        const dropped = next ? Math.max(0, stage.users - next.users) : 0;
+                        const droppedPct = stage.users > 0 ? (dropped / stage.users) * 100 : 0;
+                        const skipped = next && hasUsers && next.users > stage.users;
+                        return (
+                          <div key={stage.stage}>
+                            <div className="py-2">
+                              <div className="flex justify-between items-baseline text-sm mb-1.5">
+                                <span className={`font-medium ${!hasUsers ? "text-muted-foreground" : ""}`}>
+                                  {stage.stage}
+                                </span>
+                                <span className={`text-xs ${hasUsers ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                                  {hasUsers
+                                    ? `${stage.users} session${stage.users !== 1 ? "s" : ""} · ${pct.toFixed(0)}% of visitors`
+                                    : "0 sessions"}
+                                </span>
+                              </div>
+                              <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                                {hasUsers ? (
+                                  <div
+                                    className={`${barColors[i] ?? "bg-primary"} h-full rounded-full transition-all duration-500`}
+                                    style={{ width: `${Math.max(pct, 1.5)}%` }}
+                                  />
+                                ) : (
+                                  <div className="h-full bg-muted/40 rounded-full w-full" />
+                                )}
+                              </div>
+                              {!hasUsers && (
+                                <p className="text-xs text-muted-foreground mt-1 italic">No sessions reached this stage</p>
+                              )}
+                            </div>
+                            {!isLast && hasUsers && !skipped && dropped > 0 && (
+                              <div className="flex items-center gap-2 pl-1 py-0.5">
+                                <div className="w-px h-4 bg-destructive/40 rounded ml-1" />
+                                <span className="text-xs text-destructive">
+                                  ▼ {dropped} dropped off ({droppedPct.toFixed(0)}% lost here)
+                                </span>
+                              </div>
+                            )}
+                            {!isLast && skipped && (
+                              <div className="flex items-center gap-2 pl-1 py-0.5">
+                                <div className="w-px h-4 bg-amber-400/40 rounded ml-1" />
+                                <span className="text-xs text-amber-600 dark:text-amber-400">
+                                  ↑ next stage has more sessions — users skipped this step
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                        );
+                      })}
+                    </div>
+                  );
+                })() : (
                   <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                     No data available
                   </div>
