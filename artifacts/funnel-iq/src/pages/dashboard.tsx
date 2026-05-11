@@ -497,9 +497,14 @@ export default function DashboardPage() {
                         {metrics.map((m) => (
                           <div key={m.label} className="p-4 rounded-xl border bg-card space-y-2">
                             <div className="flex items-start justify-between gap-2">
-                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
-                                {m.label}
-                              </p>
+                              <div className="flex items-center gap-1">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-tight">
+                                  {m.label}
+                                </p>
+                                {m.higherIsBetter
+                                  ? <TrendingUp className="h-3 w-3 text-slate-400 shrink-0" />
+                                  : <TrendingDown className="h-3 w-3 text-slate-400 shrink-0" />}
+                              </div>
                               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${badgeClass(m.value, m.higherIsBetter, m.good, m.warn)}`}>
                                 {badgeLabel(m.value, m.higherIsBetter, m.good, m.warn)}
                               </span>
