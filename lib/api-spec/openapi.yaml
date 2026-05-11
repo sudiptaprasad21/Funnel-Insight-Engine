@@ -200,6 +200,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/SheetSyncResult"
 
+  /analytics/sync-gsheet-experiments:
+    post:
+      operationId: syncExperimentsToGSheet
+      tags: [analytics]
+      summary: Sync experiments log to a dedicated tab in the Google Sheet
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SheetSyncResult"
+
   # ─── Customers ───────────────────────────────────────────────────────────────
   /customers:
     get:
@@ -400,6 +413,33 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Experiment"
+
+  /ai/experiments/{id}:
+    patch:
+      operationId: updateExperiment
+      tags: [ai]
+      summary: Update experiment status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateExperimentBody"
+      responses:
+        "200":
+          description: Updated experiment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Experiment"
+        "404":
+          description: Experiment not found
 
 components:
   schemas:
@@ -748,7 +788,12 @@ components:
         expectedImpact: { type: string }
         effort:         { type: string, enum: [low, medium, high] }
         funnelStage:    { type: string }
-        status:         { type: string, enum: [proposed, active, completed, rejected] }
+        status:         { type: string, enum: [proposed, running, completed, archived] }
         createdAt:      { type: string, format: date-time }
         updatedAt:      { type: string, format: date-time, nullable: true }
         mergeNote:      { type: string, nullable: true }
+
+    UpdateExperimentBody:
+      type: object
+      properties:
+        status: { type: string, enum: [proposed, running, completed, archived] }

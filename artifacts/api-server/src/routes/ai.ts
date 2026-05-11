@@ -275,6 +275,28 @@ router.get("/ai/experiments", async (req, res): Promise<void> => {
   res.json(ListExperimentsResponse.parse(experiments));
 });
 
+// ─── Update Experiment Status ─────────────────────────────────────────────────
+router.patch("/ai/experiments/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { status } = req.body as { status?: string };
+  const allowed = ["proposed", "running", "completed", "archived"];
+  if (!status || !allowed.includes(status)) {
+    res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
+    return;
+  }
+
+  const [updated] = await db
+    .update(experimentsTable)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(experimentsTable.id, id))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "Experiment not found" }); return; }
+  res.json(updated);
+});
+
 // ─── AI Funnel Diagnosis ──────────────────────────────────────────────────────
 router.post("/ai/diagnose", async (req, res): Promise<void> => {
   const parsed = DiagnoseFunnelBody.safeParse(req.body);

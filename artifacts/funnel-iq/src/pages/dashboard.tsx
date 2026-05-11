@@ -11,15 +11,19 @@ import {
   getGetSheetInfoQueryKey,
   useSyncToGSheet,
   useSyncConversionRatesToGSheet,
+  useSyncExperimentsToGSheet,
+  useListExperiments,
+  getListExperimentsQueryKey,
+  useUpdateExperiment,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info, ClipboardList, Play, CheckCircle2, Archive, Clock, ChevronDown, ChevronUp, GitMerge, BarChart2 } from "lucide-react";
 
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FunnelExplainer } from "@/components/FunnelExplainer";
 
@@ -69,14 +73,41 @@ export default function DashboardPage() {
     },
   });
 
-  // Auto-sync both sheets to Google Sheets every 30 minutes
+  // Auto-sync all sheets to Google Sheets every 30 minutes
   useEffect(() => {
     const id = setInterval(() => {
       syncSheet.mutate({});
       syncConversionRates.mutate({});
+      syncExperiments.mutate({});
     }, 30 * 60 * 1000);
     return () => clearInterval(id);
   }, []);
+
+  const { data: experiments, isLoading: experimentsLoading } = useListExperiments({
+    query: { queryKey: getListExperimentsQueryKey(), refetchInterval: 5000 },
+  });
+
+  const updateExpStatus = useUpdateExperiment({
+    mutation: {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListExperimentsQueryKey() }),
+      onError: () => toast({ title: "Update failed", description: "Could not update experiment status.", variant: "destructive" }),
+    },
+  });
+
+  const [lastExpSynced, setLastExpSynced] = useState<string | null>(null);
+  const [expandedMergeNotes, setExpandedMergeNotes] = useState<Set<number>>(new Set());
+
+  const syncExperiments = useSyncExperimentsToGSheet({
+    mutation: {
+      onSuccess: (data) => {
+        setLastExpSynced(data.syncedAt);
+        toast({ title: "Experiments synced", description: `${data.rowsWritten} rows written to "Experiments" tab.` });
+      },
+      onError: () => {
+        toast({ title: "Sync Failed", description: "Could not sync experiments to Google Sheets.", variant: "destructive" });
+      },
+    },
+  });
 
   return (
     <DashboardLayout>
@@ -252,7 +283,7 @@ export default function DashboardPage() {
             {/* AI Drop-off Analysis */}
             <Card className="border-violet-200/60 bg-violet-50/20 dark:bg-violet-950/10">
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <BrainCircuit className="h-5 w-5 text-violet-500" />
                     <div>
@@ -263,23 +294,38 @@ export default function DashboardPage() {
                       </CardDescription>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant={analyzeDropOff.data ? "outline" : "default"}
-                    className={analyzeDropOff.data ? "" : "bg-violet-600 hover:bg-violet-700 text-white"}
-                    onClick={() => analyzeDropOff.mutate({}, {
-                      onError: () => toast({ title: "Analysis Failed", description: "Could not run AI analysis. Please try again.", variant: "destructive" }),
-                    })}
-                    disabled={analyzeDropOff.isPending}
-                  >
-                    {analyzeDropOff.isPending ? (
-                      <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Analysing…</>
-                    ) : analyzeDropOff.data ? (
-                      <><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Re-analyse</>
-                    ) : (
-                      <><Sparkles className="h-3.5 w-3.5 mr-1.5" />Analyse with AI</>
-                    )}
-                  </Button>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    {/* Feature 4: Confidence indicator based on session volume */}
+                    {summary && (() => {
+                      const v = summary.totalVisitors ?? 0;
+                      const conf = v >= 100 ? { label: "High confidence", color: "text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800" }
+                        : v >= 20 ? { label: "Medium confidence", color: "text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800" }
+                        : { label: "Low confidence", color: "text-slate-500 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700" };
+                      return (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${conf.color}`} title={`Based on ${v} sessions — AI diagnosis is ${v >= 100 ? "highly" : v >= 20 ? "moderately" : "less"} reliable at this volume`}>
+                          <BarChart2 className="h-2.5 w-2.5" />
+                          {conf.label}
+                        </span>
+                      );
+                    })()}
+                    <Button
+                      size="sm"
+                      variant={analyzeDropOff.data ? "outline" : "default"}
+                      className={analyzeDropOff.data ? "" : "bg-violet-600 hover:bg-violet-700 text-white"}
+                      onClick={() => analyzeDropOff.mutate({}, {
+                        onError: () => toast({ title: "Analysis Failed", description: "Could not run AI analysis. Please try again.", variant: "destructive" }),
+                      })}
+                      disabled={analyzeDropOff.isPending}
+                    >
+                      {analyzeDropOff.isPending ? (
+                        <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Analysing…</>
+                      ) : analyzeDropOff.data ? (
+                        <><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Re-analyse</>
+                      ) : (
+                        <><Sparkles className="h-3.5 w-3.5 mr-1.5" />Analyse with AI</>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
 
@@ -395,6 +441,145 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               )}
+            </Card>
+
+            {/* Experiments Log */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-5 w-5 text-violet-500" />
+                    <div>
+                      <CardTitle className="text-base">Experiments Log</CardTitle>
+                      <CardDescription className="text-xs mt-0.5">Track AI-suggested experiments through their lifecycle</CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => syncExperiments.mutate({})}
+                      disabled={syncExperiments.isPending}
+                      title="Sync to Google Sheets"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${syncExperiments.isPending ? "animate-spin" : ""}`} />
+                    </button>
+                    {sheetInfo?.sheetUrl && (
+                      <a
+                        href={sheetInfo.sheetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open Google Sheet"
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {lastExpSynced && (
+                  <p className="text-[11px] text-muted-foreground mt-1 ml-7">
+                    Auto-syncs to Google Sheets every 30 min · Last synced: {new Date(lastExpSynced).toLocaleString()}
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent>
+                {experimentsLoading ? (
+                  <div className="space-y-2">
+                    {[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+                  </div>
+                ) : !experiments?.length ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">No experiments yet — run an AI analysis to generate suggestions.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {experiments.map((exp) => {
+                      const statusConfig: Record<string, { label: string; icon: ReactNode; color: string }> = {
+                        proposed:  { label: "Proposed",  icon: <FlaskConical className="h-3 w-3" />, color: "text-slate-600 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700" },
+                        running:   { label: "Running",   icon: <Play className="h-3 w-3" />,          color: "text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800" },
+                        completed: { label: "Completed", icon: <CheckCircle2 className="h-3 w-3" />,  color: "text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800" },
+                        archived:  { label: "Archived",  icon: <Archive className="h-3 w-3" />,       color: "text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800" },
+                      };
+                      const effortColor: Record<string, string> = {
+                        low: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+                        medium: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+                        high: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400",
+                      };
+
+                      // Feature 3: Staleness badge — flagged if not updated in >14 days
+                      const lastActivity = exp.updatedAt ?? exp.createdAt;
+                      const daysSinceActivity = Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
+                      const isStale = daysSinceActivity > 14 && (exp.status === "proposed" || exp.status === "running");
+
+                      // Feature 5: Merge note expansion toggle
+                      const hasMergeNote = !!exp.mergeNote;
+                      const mergeExpanded = expandedMergeNotes.has(exp.id);
+
+                      return (
+                        <div key={exp.id} className="rounded-lg border border-border bg-muted/20 hover:bg-muted/40 transition-colors">
+                          <div className="flex items-start gap-3 px-3 py-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-sm font-medium leading-snug">{exp.title}</span>
+                                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${effortColor[exp.effort] ?? effortColor.medium}`}>{exp.effort.toUpperCase()}</span>
+                                {isStale && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                                    <Clock className="h-2.5 w-2.5" />
+                                    Stale ({daysSinceActivity}d)
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">{exp.funnelStage} · {exp.expectedImpact}</p>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
+                              {hasMergeNote && (
+                                <button
+                                  onClick={() => setExpandedMergeNotes(prev => {
+                                    const next = new Set(prev);
+                                    next.has(exp.id) ? next.delete(exp.id) : next.add(exp.id);
+                                    return next;
+                                  })}
+                                  title="View merge history"
+                                  className="flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded border border-transparent text-violet-600 hover:bg-violet-50 dark:text-violet-400 dark:hover:bg-violet-950/30 transition-colors"
+                                >
+                                  <GitMerge className="h-3 w-3" />
+                                  {mergeExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                </button>
+                              )}
+                              {(["proposed","running","completed","archived"] as const).map((s) => {
+                                const cfg = statusConfig[s];
+                                const active = (exp.status ?? "proposed") === s;
+                                return (
+                                  <button
+                                    key={s}
+                                    onClick={() => !active && updateExpStatus.mutate({ id: exp.id, data: { status: s } })}
+                                    disabled={active || updateExpStatus.isPending}
+                                    title={cfg.label}
+                                    className={`flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded border transition-colors ${active ? cfg.color + " cursor-default" : "text-muted-foreground border-transparent hover:bg-muted"}`}
+                                  >
+                                    {cfg.icon}
+                                    {cfg.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          {/* Feature 5: Merge history panel */}
+                          {hasMergeNote && mergeExpanded && (
+                            <div className="px-3 pb-3 pt-0">
+                              <div className="flex items-start gap-2 rounded-md bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/40 px-3 py-2">
+                                <GitMerge className="h-3.5 w-3.5 text-violet-500 mt-0.5 shrink-0" />
+                                <div>
+                                  <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-400 uppercase tracking-wide mb-0.5">Merge Note</p>
+                                  <p className="text-xs text-violet-800 dark:text-violet-300">{exp.mergeNote}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
             </Card>
 
             <Card>
@@ -640,7 +825,7 @@ export default function DashboardPage() {
   );
 }
 
-function MetricCard({ title, value, loading, icon }: { title: string, value?: number | string, loading: boolean, icon: React.ReactNode }) {
+function MetricCard({ title, value, loading, icon }: { title: string, value?: number | string, loading: boolean, icon: ReactNode }) {
   return (
     <Card>
       <CardContent className="p-6">

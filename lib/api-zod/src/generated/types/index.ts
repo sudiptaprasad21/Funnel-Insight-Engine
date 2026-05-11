@@ -43,3 +43,5 @@ export * from "./sheetSyncResult";
 export * from "./trafficData";
 export * from "./trafficPoint";
 export * from "./updateCustomerBody";
+export * from "./updateExperimentBody";
+export * from "./updateExperimentBodyStatus";

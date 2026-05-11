@@ -310,9 +310,9 @@ export type ExperimentStatus =
 
 export const ExperimentStatus = {
   proposed: "proposed",
-  active: "active",
+  running: "running",
   completed: "completed",
-  rejected: "rejected",
+  archived: "archived",
 } as const;
 
 export interface Experiment {
@@ -333,6 +333,20 @@ export interface DiagnosisResult {
   topInsights: Insight[];
   experiments: Experiment[];
   generatedAt: string;
+}
+
+export type UpdateExperimentBodyStatus =
+  (typeof UpdateExperimentBodyStatus)[keyof typeof UpdateExperimentBodyStatus];
+
+export const UpdateExperimentBodyStatus = {
+  proposed: "proposed",
+  running: "running",
+  completed: "completed",
+  archived: "archived",
+} as const;
+
+export interface UpdateExperimentBody {
+  status?: UpdateExperimentBodyStatus;
 }
 
 export type ListEventsParams = {

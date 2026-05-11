@@ -39,6 +39,7 @@ import type {
   SheetSyncResult,
   TrafficData,
   UpdateCustomerBody,
+  UpdateExperimentBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -999,6 +1000,87 @@ export const useSyncCustomersToGSheet = <
 };
 
 /**
+ * @summary Sync experiments log to a dedicated tab in the Google Sheet
+ */
+export const getSyncExperimentsToGSheetUrl = () => {
+  return `/api/analytics/sync-gsheet-experiments`;
+};
+
+export const syncExperimentsToGSheet = async (
+  options?: RequestInit,
+): Promise<SheetSyncResult> => {
+  return customFetch<SheetSyncResult>(getSyncExperimentsToGSheetUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncExperimentsToGSheetMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncExperimentsToGSheet>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncExperimentsToGSheet>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["syncExperimentsToGSheet"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncExperimentsToGSheet>>,
+    void
+  > = () => {
+    return syncExperimentsToGSheet(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncExperimentsToGSheetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncExperimentsToGSheet>>
+>;
+
+export type SyncExperimentsToGSheetMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Sync experiments log to a dedicated tab in the Google Sheet
+ */
+export const useSyncExperimentsToGSheet = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncExperimentsToGSheet>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof syncExperimentsToGSheet>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSyncExperimentsToGSheetMutationOptions(options));
+};
+
+/**
  * @summary List customers with subscription and repeat status
  */
 export const getListCustomersUrl = (params?: ListCustomersParams) => {
@@ -1860,3 +1942,90 @@ export function useListExperiments<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update experiment status
+ */
+export const getUpdateExperimentUrl = (id: number) => {
+  return `/api/ai/experiments/${id}`;
+};
+
+export const updateExperiment = async (
+  id: number,
+  updateExperimentBody: UpdateExperimentBody,
+  options?: RequestInit,
+): Promise<Experiment> => {
+  return customFetch<Experiment>(getUpdateExperimentUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateExperimentBody),
+  });
+};
+
+export const getUpdateExperimentMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateExperiment>>,
+    TError,
+    { id: number; data: BodyType<UpdateExperimentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateExperiment>>,
+  TError,
+  { id: number; data: BodyType<UpdateExperimentBody> },
+  TContext
+> => {
+  const mutationKey = ["updateExperiment"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateExperiment>>,
+    { id: number; data: BodyType<UpdateExperimentBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateExperiment(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateExperimentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateExperiment>>
+>;
+export type UpdateExperimentMutationBody = BodyType<UpdateExperimentBody>;
+export type UpdateExperimentMutationError = ErrorType<void>;
+
+/**
+ * @summary Update experiment status
+ */
+export const useUpdateExperiment = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateExperiment>>,
+    TError,
+    { id: number; data: BodyType<UpdateExperimentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateExperiment>>,
+  TError,
+  { id: number; data: BodyType<UpdateExperimentBody> },
+  TContext
+> => {
+  return useMutation(getUpdateExperimentMutationOptions(options));
+};

@@ -5,8 +5,9 @@ import {
   customersTable,
   productsTable,
   settingsTable,
+  experimentsTable,
 } from "@workspace/db";
-import { sql, count, avg, eq } from "drizzle-orm";
+import { sql, count, avg, eq, desc } from "drizzle-orm";
 import { createSpreadsheet, clearAndWriteSheet, clearAndWriteNamedSheet, ensureSheetTab, sheetUrl } from "../lib/gsheets";
 
 const router: IRouter = Router();
@@ -547,6 +548,62 @@ router.post("/analytics/sync-gsheet-customers", async (req, res): Promise<void> 
   await db
     .insert(settingsTable)
     .values({ key: "gsheet_customers_last_synced", value: now })
+    .onConflictDoUpdate({ target: settingsTable.key, set: { value: now, updatedAt: new Date() } });
+
+  res.json({
+    spreadsheetId,
+    sheetUrl: sheetUrl(spreadsheetId),
+    syncedAt: now,
+    rowsWritten,
+  });
+});
+
+// ─── Sync Experiments to Google Sheets ────────────────────────────────────────
+router.post("/analytics/sync-gsheet-experiments", async (req, res): Promise<void> => {
+  const experiments = await db.select().from(experimentsTable).orderBy(desc(experimentsTable.createdAt));
+
+  const now = new Date().toISOString();
+
+  const headers = ["ID", "Title", "Funnel Stage", "Hypothesis", "Expected Impact", "Effort", "Status", "Created", "Last Updated", "Merge Note", "Synced At"];
+
+  const dataRows: (string | number)[][] = experiments.map((e) => [
+    e.id,
+    e.title,
+    e.funnelStage,
+    e.hypothesis,
+    e.expectedImpact,
+    e.effort,
+    e.status,
+    new Date(e.createdAt).toLocaleString("en-IN"),
+    e.updatedAt ? new Date(e.updatedAt).toLocaleString("en-IN") : "—",
+    e.mergeNote ?? "—",
+    now,
+  ]);
+
+  const rows: (string | number)[][] = [headers, ...dataRows];
+
+  const existing = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "gsheet_spreadsheet_id"));
+
+  let spreadsheetId: string;
+  if (existing.length && existing[0]) {
+    spreadsheetId = existing[0].value;
+  } else {
+    spreadsheetId = await createSpreadsheet("Nexpoint Funnel IQ — Funnel Stages");
+    await db
+      .insert(settingsTable)
+      .values({ key: "gsheet_spreadsheet_id", value: spreadsheetId })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value: spreadsheetId } });
+  }
+
+  await ensureSheetTab(spreadsheetId, "Experiments");
+  const rowsWritten = await clearAndWriteNamedSheet(spreadsheetId, "Experiments", rows);
+
+  await db
+    .insert(settingsTable)
+    .values({ key: "gsheet_experiments_last_synced", value: now })
     .onConflictDoUpdate({ target: settingsTable.key, set: { value: now, updatedAt: new Date() } });
 
   res.json({

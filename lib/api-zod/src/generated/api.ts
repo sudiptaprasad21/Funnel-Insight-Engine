@@ -208,6 +208,16 @@ export const SyncCustomersToGSheetResponse = zod.object({
 });
 
 /**
+ * @summary Sync experiments log to a dedicated tab in the Google Sheet
+ */
+export const SyncExperimentsToGSheetResponse = zod.object({
+  sheetUrl: zod.string(),
+  spreadsheetId: zod.string(),
+  syncedAt: zod.coerce.date(),
+  rowsWritten: zod.number(),
+});
+
+/**
  * @summary List customers with subscription and repeat status
  */
 export const listCustomersQueryLimitDefault = 50;
@@ -384,7 +394,7 @@ export const DiagnoseFunnelResponse = zod.object({
       effort: zod.enum(["low", "medium", "high"]),
       funnelStage: zod.string(),
       status: zod
-        .enum(["proposed", "active", "completed", "rejected"])
+        .enum(["proposed", "running", "completed", "archived"])
         .optional(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date().nullish(),
@@ -432,9 +442,33 @@ export const ListExperimentsResponseItem = zod.object({
   expectedImpact: zod.string(),
   effort: zod.enum(["low", "medium", "high"]),
   funnelStage: zod.string(),
-  status: zod.enum(["proposed", "active", "completed", "rejected"]).optional(),
+  status: zod.enum(["proposed", "running", "completed", "archived"]).optional(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date().nullish(),
   mergeNote: zod.string().nullish(),
 });
 export const ListExperimentsResponse = zod.array(ListExperimentsResponseItem);
+
+/**
+ * @summary Update experiment status
+ */
+export const UpdateExperimentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateExperimentBody = zod.object({
+  status: zod.enum(["proposed", "running", "completed", "archived"]).optional(),
+});
+
+export const UpdateExperimentResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  hypothesis: zod.string(),
+  expectedImpact: zod.string(),
+  effort: zod.enum(["low", "medium", "high"]),
+  funnelStage: zod.string(),
+  status: zod.enum(["proposed", "running", "completed", "archived"]).optional(),
+  createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date().nullish(),
+  mergeNote: zod.string().nullish(),
+});

@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ExperimentStatus =
-  (typeof ExperimentStatus)[keyof typeof ExperimentStatus];
+export type UpdateExperimentBodyStatus =
+  (typeof UpdateExperimentBodyStatus)[keyof typeof UpdateExperimentBodyStatus];
 
-export const ExperimentStatus = {
+export const UpdateExperimentBodyStatus = {
   proposed: "proposed",
   running: "running",
   completed: "completed",
