@@ -11,6 +11,8 @@ export const experimentsTable = pgTable("experiments", {
   funnelStage: text("funnel_stage").notNull(),
   status: text("status").notNull().default("proposed"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
+  mergeNote: text("merge_note"),
 });
 
 export const insertExperimentSchema = createInsertSchema(experimentsTable).omit({ id: true, createdAt: true });

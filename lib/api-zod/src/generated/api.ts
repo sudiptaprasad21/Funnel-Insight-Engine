@@ -387,6 +387,8 @@ export const DiagnoseFunnelResponse = zod.object({
         .enum(["proposed", "active", "completed", "rejected"])
         .optional(),
       createdAt: zod.coerce.date(),
+      updatedAt: zod.coerce.date().nullish(),
+      mergeNote: zod.string().nullish(),
     }),
   ),
   generatedAt: zod.coerce.date(),
@@ -432,5 +434,7 @@ export const ListExperimentsResponseItem = zod.object({
   funnelStage: zod.string(),
   status: zod.enum(["proposed", "active", "completed", "rejected"]).optional(),
   createdAt: zod.coerce.date(),
+  updatedAt: zod.coerce.date().nullish(),
+  mergeNote: zod.string().nullish(),
 });
 export const ListExperimentsResponse = zod.array(ListExperimentsResponseItem);

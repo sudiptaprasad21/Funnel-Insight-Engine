@@ -3,8 +3,85 @@ import { db } from "@workspace/db";
 import { experimentsTable, funnelEventsTable, customersTable } from "@workspace/db";
 import { DiagnoseFunnelBody, ListExperimentsResponse, DiagnoseFunnelResponse, AnalyzeDropOffResponse } from "@workspace/api-zod";
 import { openai } from "@workspace/integrations-openai-ai-server";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
+
+// ─── Similarity Helpers ───────────────────────────────────────────────────────
+
+function tokenize(text: string): Set<string> {
+  return new Set(
+    text.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean)
+  );
+}
+
+function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+  const intersection = new Set([...a].filter((w) => b.has(w)));
+  const union = new Set([...a, ...b]);
+  return union.size === 0 ? 0 : intersection.size / union.size;
+}
+
+/**
+ * Finds an existing experiment in the same funnel stage whose title is
+ * sufficiently similar (Jaccard ≥ 0.40) to the incoming title.
+ */
+async function findSimilarExperiment(
+  title: string,
+  funnelStage: string
+): Promise<{ id: number; title: string } | null> {
+  const existing = await db
+    .select({ id: experimentsTable.id, title: experimentsTable.title })
+    .from(experimentsTable)
+    .where(eq(experimentsTable.funnelStage, funnelStage));
+
+  const incomingTokens = tokenize(title);
+  for (const row of existing) {
+    if (jaccardSimilarity(incomingTokens, tokenize(row.title)) >= 0.40) {
+      return row;
+    }
+  }
+  return null;
+}
+
+/**
+ * Upserts an experiment: updates if a similar one already exists (and notes the
+ * merge), otherwise inserts a new row.
+ * Returns { action: "updated" | "inserted" }.
+ */
+async function upsertExperiment(exp: {
+  title: string;
+  hypothesis: string;
+  expectedImpact: string;
+  effort: string;
+  funnelStage: string;
+}): Promise<{ action: "updated" | "inserted" }> {
+  const similar = await findSimilarExperiment(exp.title, exp.funnelStage);
+
+  if (similar) {
+    const note = `Refreshed on ${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}: AI proposed "${exp.title}" — merged with existing "${similar.title}" (same stage, ≥40% title overlap).`;
+    await db
+      .update(experimentsTable)
+      .set({
+        title: exp.title,
+        hypothesis: exp.hypothesis,
+        expectedImpact: exp.expectedImpact,
+        effort: exp.effort,
+        updatedAt: new Date(),
+        mergeNote: note,
+      })
+      .where(eq(experimentsTable.id, similar.id));
+    return { action: "updated" };
+  }
+
+  await db.insert(experimentsTable).values({
+    title: exp.title,
+    hypothesis: exp.hypothesis,
+    expectedImpact: exp.expectedImpact,
+    effort: exp.effort ?? "medium",
+    funnelStage: exp.funnelStage,
+    status: "proposed",
+  });
+  return { action: "inserted" };
+}
 
 const router: IRouter = Router();
 
@@ -130,14 +207,13 @@ Provide 4–6 drop-off reasons (covering the highest-loss stages), exactly 3 hyp
       effort: "medium",
     };
 
-    // Persist the suggested experiment so it appears in the experiments table
-    await db.insert(experimentsTable).values({
+    // Upsert: merge with existing similar experiment or insert fresh
+    await upsertExperiment({
       title: experiment.title,
       hypothesis: experiment.hypothesis,
       expectedImpact: experiment.expectedImpact,
       effort: experiment.effort ?? "medium",
       funnelStage: parsed_result.topDropOffStage ?? topDropOffStage,
-      status: "proposed",
     });
 
     res.json(AnalyzeDropOffResponse.parse({
@@ -288,21 +364,25 @@ Provide 3-5 insights and 3-4 experiments. Be specific, data-backed, and actionab
     const raw = completion.choices[0]?.message?.content ?? "{}";
     const parsed_result = JSON.parse(raw);
 
-    // Save experiments to DB
-    const experimentRows = (parsed_result.experiments ?? []).map(
-      (exp: { title: string; hypothesis: string; expectedImpact: string; effort: string; funnelStage: string }) => ({
-        title: exp.title,
-        hypothesis: exp.hypothesis,
-        expectedImpact: exp.expectedImpact,
-        effort: exp.effort ?? "medium",
-        funnelStage: exp.funnelStage ?? funnelStage,
-        status: "proposed",
-      }),
+    // Upsert each experiment: merge with similar existing or insert fresh
+    const rawExperiments: { title: string; hypothesis: string; expectedImpact: string; effort: string; funnelStage: string }[] =
+      parsed_result.experiments ?? [];
+    await Promise.all(
+      rawExperiments.map((exp) =>
+        upsertExperiment({
+          title: exp.title,
+          hypothesis: exp.hypothesis,
+          expectedImpact: exp.expectedImpact,
+          effort: exp.effort ?? "medium",
+          funnelStage: exp.funnelStage ?? funnelStage,
+        })
+      )
     );
-
-    const savedExperiments = experimentRows.length > 0
-      ? await db.insert(experimentsTable).values(experimentRows).returning()
-      : [];
+    const savedExperiments = await db
+      .select()
+      .from(experimentsTable)
+      .where(eq(experimentsTable.funnelStage, funnelStage))
+      .orderBy(desc(experimentsTable.createdAt));
 
     const result = {
       summary: parsed_result.summary ?? "Analysis complete.",

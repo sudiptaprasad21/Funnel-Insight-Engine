@@ -750,3 +750,5 @@ components:
         funnelStage:    { type: string }
         status:         { type: string, enum: [proposed, active, completed, rejected] }
         createdAt:      { type: string, format: date-time }
+        updatedAt:      { type: string, format: date-time, nullable: true }
+        mergeNote:      { type: string, nullable: true }

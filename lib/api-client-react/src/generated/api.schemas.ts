@@ -324,6 +324,8 @@ export interface Experiment {
   funnelStage: string;
   status?: ExperimentStatus;
   createdAt: string;
+  updatedAt?: string | null;
+  mergeNote?: string | null;
 }
 
 export interface DiagnosisResult {

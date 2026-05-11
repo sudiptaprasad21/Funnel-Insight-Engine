@@ -17,4 +17,6 @@ export interface Experiment {
   funnelStage: string;
   status?: ExperimentStatus;
   createdAt: Date;
+  updatedAt?: Date | null;
+  mergeNote?: string | null;
 }
