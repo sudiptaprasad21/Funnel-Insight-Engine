@@ -3,6 +3,7 @@
  *
  * Creates the full schema on Supabase and migrates all data from the Replit DB.
  * Safe to re-run: uses CREATE TABLE IF NOT EXISTS and ON CONFLICT DO NOTHING/UPDATE.
+ * Handles special characters (e.g. #) in passwords correctly.
  *
  * Usage: pnpm --filter @workspace/scripts run migrate-to-supabase
  */
@@ -23,11 +24,28 @@ if (!TARGET_URL) {
   process.exit(1);
 }
 
+/**
+ * Parse a postgres connection URL using a regex so that special characters
+ * in the password (e.g. #, @) are preserved correctly.
+ * Standard URL parsers treat # as a fragment delimiter and silently truncate.
+ */
+function parsePostgresUrl(url: string) {
+  const match = url.match(
+    /^(?:postgresql|postgres):\/\/([^:]+):(.+)@([^@:/]+)(?::(\d+))?\/([^?]+)/,
+  );
+  if (!match) {
+    throw new Error(`Cannot parse connection string. Expected format: postgresql://user:password@host:port/database`);
+  }
+  const [, user, password, host, port, database] = match;
+  return { user, password, host, port: port ? parseInt(port, 10) : 5432, database };
+}
+
 const source = new Pool({ connectionString: SOURCE_URL });
-const target = new Pool({
-  connectionString: TARGET_URL,
-  ssl: { rejectUnauthorized: false },
-});
+
+const targetParsed = parsePostgresUrl(TARGET_URL);
+console.log(`Connecting to Supabase host: ${targetParsed.host}`);
+
+const target = new Pool({ ...targetParsed, ssl: { rejectUnauthorized: false } });
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS products (
@@ -116,9 +134,7 @@ async function run() {
         );
       }
       await tgt.query("COMMIT");
-      if (rows.length) {
-        await tgt.query("SELECT setval('products_id_seq',(SELECT MAX(id) FROM products))");
-      }
+      if (rows.length) await tgt.query("SELECT setval('products_id_seq',(SELECT MAX(id) FROM products))");
       console.log(`  products       → ${rows.length} rows`);
     }
 
@@ -136,13 +152,11 @@ async function run() {
         );
       }
       await tgt.query("COMMIT");
-      if (rows.length) {
-        await tgt.query("SELECT setval('customers_id_seq',(SELECT MAX(id) FROM customers))");
-      }
+      if (rows.length) await tgt.query("SELECT setval('customers_id_seq',(SELECT MAX(id) FROM customers))");
       console.log(`  customers      → ${rows.length} rows`);
     }
 
-    // funnel_events — chunked to avoid very large transactions
+    // funnel_events — chunked
     {
       const { rows } = await src.query(
         "SELECT id,event_type,session_id,customer_id,product_id,metadata,created_at FROM funnel_events ORDER BY id",
@@ -160,9 +174,7 @@ async function run() {
         }
         await tgt.query("COMMIT");
       }
-      if (rows.length) {
-        await tgt.query("SELECT setval('funnel_events_id_seq',(SELECT MAX(id) FROM funnel_events))");
-      }
+      if (rows.length) await tgt.query("SELECT setval('funnel_events_id_seq',(SELECT MAX(id) FROM funnel_events))");
       console.log(`  funnel_events  → ${rows.length} rows`);
     }
 
@@ -180,9 +192,7 @@ async function run() {
         );
       }
       await tgt.query("COMMIT");
-      if (rows.length) {
-        await tgt.query("SELECT setval('experiments_id_seq',(SELECT MAX(id) FROM experiments))");
-      }
+      if (rows.length) await tgt.query("SELECT setval('experiments_id_seq',(SELECT MAX(id) FROM experiments))");
       console.log(`  experiments    → ${rows.length} rows`);
     }
 
@@ -201,7 +211,7 @@ async function run() {
       console.log(`  app_settings   → ${rows.length} rows`);
     }
 
-    // ── Step 3: Verify counts match ───────────────────────────────────────
+    // ── Step 3: Verify ────────────────────────────────────────────────────
     console.log("\nStep 3/3 — Verifying row counts…\n");
     const tables = ["funnel_events","customers","products","experiments","app_settings"];
     let allOk = true;
@@ -215,7 +225,9 @@ async function run() {
       console.log(`  ${ok ? "✓" : "✗ MISMATCH"}  ${table.padEnd(18)} source=${srcN}  supabase=${tgtN}`);
     }
 
-    console.log(allOk ? "\n✓ Migration successful — all counts match." : "\n✗ Some counts differ — check the output above.");
+    console.log(allOk
+      ? "\n✓ Migration successful — all counts match."
+      : "\n✗ Some counts differ — check the output above.");
   } finally {
     src.release();
     tgt.release();
