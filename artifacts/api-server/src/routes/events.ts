@@ -6,7 +6,7 @@ import {
   ListEventsQueryParams,
   ListEventsResponse,
 } from "@workspace/api-zod";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql, and } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -54,11 +54,16 @@ router.get("/events", async (req, res): Promise<void> => {
     return;
   }
 
-  const { limit } = query.data;
+  const { limit, eventType, sessionId } = query.data;
+
+  const conditions = [];
+  if (eventType) conditions.push(eq(funnelEventsTable.eventType, eventType));
+  if (sessionId) conditions.push(eq(funnelEventsTable.sessionId, sessionId));
 
   const events = await db
     .select()
     .from(funnelEventsTable)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(funnelEventsTable.createdAt))
     .limit(limit ?? 100);
 

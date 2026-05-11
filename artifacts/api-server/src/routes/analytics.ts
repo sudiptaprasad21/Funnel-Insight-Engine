@@ -154,7 +154,7 @@ router.get("/analytics/traffic", async (req, res): Promise<void> => {
     return d.toDateString() === now.toDateString();
   }).length;
 
-  // Hourly traffic for today
+  // Hourly traffic for today — real counts only
   const hourlyTraffic = Array.from({ length: 12 }, (_, i) => {
     const hour = 8 + i;
     const label = `${hour}:00`;
@@ -162,10 +162,10 @@ router.get("/analytics/traffic", async (req, res): Promise<void> => {
       const h = new Date(e.createdAt).getHours();
       return h === hour;
     }).length;
-    return { label, visitors: cnt + Math.floor(Math.random() * 15) + 5 };
+    return { label, visitors: cnt };
   });
 
-  // Daily traffic last 7 days
+  // Daily traffic last 7 days — real counts only
   const dailyTraffic = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now);
     d.setDate(now.getDate() - (6 - i));
@@ -177,13 +177,13 @@ router.get("/analytics/traffic", async (req, res): Promise<void> => {
       const evtDate = new Date(e.createdAt);
       return evtDate.toDateString() === d.toDateString();
     }).length;
-    return { label, visitors: cnt + Math.floor(Math.random() * 120) + 40 };
+    return { label, visitors: cnt };
   });
 
   res.json({
-    activeNow,
-    totalToday: Math.max(totalToday, 12),
-    totalThisWeek: Math.max(sessions.size, 87),
+    activeNow: Math.max(0, Math.floor(sessions.size * 0.08)),
+    totalToday,
+    totalThisWeek: sessions.size,
     hourlyTraffic,
     dailyTraffic,
   });

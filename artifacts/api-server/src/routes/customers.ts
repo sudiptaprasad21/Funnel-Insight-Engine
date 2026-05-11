@@ -48,12 +48,22 @@ router.post("/customers", async (req, res): Promise<void> => {
     return;
   }
 
-  const [customer] = await db
-    .insert(customersTable)
-    .values(parsed.data)
-    .returning();
+  try {
+    const [customer] = await db
+      .insert(customersTable)
+      .values(parsed.data)
+      .returning();
 
-  res.status(201).json(GetCustomerResponse.parse(customer));
+    res.status(201).json(GetCustomerResponse.parse(customer));
+  } catch (err: unknown) {
+    const pg = err as { code?: string; cause?: { code?: string } };
+    const code = pg.code ?? pg.cause?.code;
+    if (code === "23505") {
+      res.status(409).json({ error: "A customer with this email already exists" });
+      return;
+    }
+    throw err;
+  }
 });
 
 router.patch("/customers/:id", async (req, res): Promise<void> => {
@@ -66,6 +76,11 @@ router.patch("/customers/:id", async (req, res): Promise<void> => {
   const body = UpdateCustomerBody.safeParse(req.body);
   if (!body.success) {
     res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  if (Object.keys(body.data).length === 0) {
+    res.status(400).json({ error: "No fields provided to update" });
     return;
   }
 
