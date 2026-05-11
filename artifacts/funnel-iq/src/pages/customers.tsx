@@ -228,19 +228,47 @@ export default function CustomersPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Subscription Health</CardTitle>
-              <CardDescription>Nappy monthly subscription KPIs</CardDescription>
+              <CardTitle>Order Distribution</CardTitle>
+              <CardDescription>Customers grouped by number of purchases</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {trendsLoading ? (
+              {customersLoading ? (
                 <Skeleton className="h-[200px] w-full" />
-              ) : (
-                <>
-                  <HealthRow label="Active Subs" value={trends?.activeSubscriptions ?? 0} total={trends?.totalCustomers ?? 1} color="bg-green-500" />
-                  <HealthRow label="Repeat Buyers" value={trends?.repeatCustomers ?? 0} total={trends?.totalCustomers ?? 1} color="bg-blue-500" />
-                  <HealthRow label="New This Month" value={trends?.newThisMonth ?? 0} total={trends?.totalCustomers ?? 1} color="bg-purple-500" />
-                </>
-              )}
+              ) : (() => {
+                const total = customers?.length ?? 0;
+                const buckets = [
+                  { label: "0 orders", description: "Browsed, never bought", color: "bg-slate-400", hex: "#94a3b8", count: customers?.filter(c => (c.totalOrders ?? 0) === 0).length ?? 0 },
+                  { label: "1 order", description: "One-time buyer", color: "bg-blue-500", hex: "#3b82f6", count: customers?.filter(c => (c.totalOrders ?? 0) === 1).length ?? 0 },
+                  { label: "2 orders", description: "Returning buyer", color: "bg-purple-500", hex: "#a855f7", count: customers?.filter(c => (c.totalOrders ?? 0) === 2).length ?? 0 },
+                  { label: "3+ orders", description: "Loyal customer", color: "bg-green-500", hex: "#22c55e", count: customers?.filter(c => (c.totalOrders ?? 0) >= 3).length ?? 0 },
+                ];
+                return (
+                  <div className="space-y-4">
+                    {buckets.map(b => {
+                      const pct = total > 0 ? Math.round((b.count / total) * 100) : 0;
+                      return (
+                        <div key={b.label} className="space-y-1">
+                          <div className="flex justify-between items-baseline text-sm">
+                            <div>
+                              <span className="font-medium">{b.label}</span>
+                              <span className="text-xs text-muted-foreground ml-2">{b.description}</span>
+                            </div>
+                            <span className="font-semibold tabular-nums">
+                              {b.count} <span className="font-normal text-muted-foreground text-xs">({pct}%)</span>
+                            </span>
+                          </div>
+                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div className={`h-full ${b.color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <p className="text-[11px] text-muted-foreground pt-1 border-t border-border">
+                      {customers?.filter(c => (c.totalOrders ?? 0) >= 2).length ?? 0} of {total} customers have purchased more than once
+                    </p>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </div>
