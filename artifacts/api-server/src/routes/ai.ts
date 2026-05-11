@@ -36,11 +36,11 @@ router.post("/ai/analyze-drop-off", async (req, res): Promise<void> => {
     { stage: "Banner Click",        users: bannerClicks,  dropOff: 0, dropOffRate: 0 },
     { stage: "Product View",        users: productViews,  dropOff: 0, dropOffRate: 0 },
     { stage: "Product Detail View", users: detailViews,   dropOff: 0, dropOffRate: 0 },
-    { stage: "Subscription Intent", users: subIntents,    dropOff: 0, dropOffRate: 0 },
     { stage: "Wishlist Save",       users: wishlistSaves, dropOff: 0, dropOffRate: 0 },
     { stage: "Add to Cart",         users: cartAdds,      dropOff: 0, dropOffRate: 0 },
     { stage: "Checkout",            users: checkouts,     dropOff: 0, dropOffRate: 0 },
     { stage: "Purchased",           users: purchases,     dropOff: 0, dropOffRate: 0 },
+    { stage: "Subscription Intent", users: subIntents,    dropOff: 0, dropOffRate: 0 },
     { stage: "Subscribed",          users: subscribed,    dropOff: 0, dropOffRate: 0 },
   ];
 
