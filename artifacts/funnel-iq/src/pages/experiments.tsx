@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import aiBrainImg from "@assets/ai-brain.png";
+import { Brain } from "lucide-react";
 import {
   useListExperiments,
   getListExperimentsQueryKey,
@@ -115,7 +115,7 @@ export default function ExperimentsPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="flex items-center gap-2.5 text-3xl font-bold tracking-tight mb-1">
-              <img src={aiBrainImg} className="h-8 w-8" style={{ filter: "brightness(0) saturate(100%) invert(41%) sepia(69%) saturate(1000%) hue-rotate(234deg) brightness(0.97)" }} alt="" />
+              <Brain className="h-8 w-8 text-violet-500 shrink-0" />
               Experiments Log
             </h1>
             <p className="text-muted-foreground text-sm">Track AI-suggested A/B experiments through their full lifecycle</p>
