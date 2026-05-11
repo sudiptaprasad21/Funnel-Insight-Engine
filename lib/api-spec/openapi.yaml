@@ -347,6 +347,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/DiagnosisResult"
 
+  /ai/analyze-drop-off:
+    post:
+      operationId: analyzeDropOff
+      tags: [ai]
+      summary: AI-powered drop-off analysis — scans real funnel stage data and returns likely reasons, testable hypotheses, and one suggested experiment
+      responses:
+        "200":
+          description: AI drop-off analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DropOffAIAnalysis"
+
   /ai/experiments:
     get:
       operationId: listExperiments
@@ -637,6 +650,49 @@ components:
         spreadsheetId: { type: string }
         syncedAt:      { type: string, format: date-time }
         rowsWritten:   { type: integer }
+
+    # ─── AI Drop-off Analysis ────────────────────────────────────────────────
+    DropOffAIAnalysis:
+      type: object
+      required: [topDropOffStage, dropOffReasons, hypotheses, suggestedExperiment, generatedAt]
+      properties:
+        topDropOffStage:    { type: string }
+        dropOffReasons:
+          type: array
+          items:
+            $ref: "#/components/schemas/DropOffAIReason"
+        hypotheses:
+          type: array
+          items:
+            $ref: "#/components/schemas/DropOffHypothesis"
+        suggestedExperiment:
+          $ref: "#/components/schemas/DropOffSuggestedExperiment"
+        generatedAt:        { type: string, format: date-time }
+
+    DropOffAIReason:
+      type: object
+      required: [reason, likelihood, stage]
+      properties:
+        reason:     { type: string }
+        likelihood: { type: string, enum: [high, medium, low] }
+        stage:      { type: string }
+
+    DropOffHypothesis:
+      type: object
+      required: [hypothesis, rationale, stage]
+      properties:
+        hypothesis: { type: string }
+        rationale:  { type: string }
+        stage:      { type: string }
+
+    DropOffSuggestedExperiment:
+      type: object
+      required: [title, hypothesis, expectedImpact, effort]
+      properties:
+        title:          { type: string }
+        hypothesis:     { type: string }
+        expectedImpact: { type: string }
+        effort:         { type: string, enum: [low, medium, high] }
 
     # ─── AI ──────────────────────────────────────────────────────────────────
     DiagnoseInput:

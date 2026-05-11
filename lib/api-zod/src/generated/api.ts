@@ -385,6 +385,34 @@ export const DiagnoseFunnelResponse = zod.object({
 });
 
 /**
+ * @summary AI-powered drop-off analysis — scans real funnel stage data and returns likely reasons, testable hypotheses, and one suggested experiment
+ */
+export const AnalyzeDropOffResponse = zod.object({
+  topDropOffStage: zod.string(),
+  dropOffReasons: zod.array(
+    zod.object({
+      reason: zod.string(),
+      likelihood: zod.enum(["high", "medium", "low"]),
+      stage: zod.string(),
+    }),
+  ),
+  hypotheses: zod.array(
+    zod.object({
+      hypothesis: zod.string(),
+      rationale: zod.string(),
+      stage: zod.string(),
+    }),
+  ),
+  suggestedExperiment: zod.object({
+    title: zod.string(),
+    hypothesis: zod.string(),
+    expectedImpact: zod.string(),
+    effort: zod.enum(["low", "medium", "high"]),
+  }),
+  generatedAt: zod.coerce.date(),
+});
+
+/**
  * @summary Get list of previously generated experiment suggestions
  */
 export const ListExperimentsResponseItem = zod.object({

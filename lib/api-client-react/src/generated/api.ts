@@ -23,6 +23,7 @@ import type {
   CustomerTrends,
   DiagnoseInput,
   DiagnosisResult,
+  DropOffAIAnalysis,
   DropOffAnalysis,
   EventInput,
   Experiment,
@@ -1540,6 +1541,87 @@ export const useDiagnoseFunnel = <
   TContext
 > => {
   return useMutation(getDiagnoseFunnelMutationOptions(options));
+};
+
+/**
+ * @summary AI-powered drop-off analysis — scans real funnel stage data and returns likely reasons, testable hypotheses, and one suggested experiment
+ */
+export const getAnalyzeDropOffUrl = () => {
+  return `/api/ai/analyze-drop-off`;
+};
+
+export const analyzeDropOff = async (
+  options?: RequestInit,
+): Promise<DropOffAIAnalysis> => {
+  return customFetch<DropOffAIAnalysis>(getAnalyzeDropOffUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAnalyzeDropOffMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeDropOff>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyzeDropOff>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["analyzeDropOff"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyzeDropOff>>,
+    void
+  > = () => {
+    return analyzeDropOff(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyzeDropOffMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyzeDropOff>>
+>;
+
+export type AnalyzeDropOffMutationError = ErrorType<unknown>;
+
+/**
+ * @summary AI-powered drop-off analysis — scans real funnel stage data and returns likely reasons, testable hypotheses, and one suggested experiment
+ */
+export const useAnalyzeDropOff = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeDropOff>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyzeDropOff>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAnalyzeDropOffMutationOptions(options));
 };
 
 /**

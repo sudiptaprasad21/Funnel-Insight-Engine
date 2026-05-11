@@ -238,6 +238,51 @@ export interface SheetSyncResult {
   rowsWritten: number;
 }
 
+export type DropOffAIReasonLikelihood =
+  (typeof DropOffAIReasonLikelihood)[keyof typeof DropOffAIReasonLikelihood];
+
+export const DropOffAIReasonLikelihood = {
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
+
+export interface DropOffAIReason {
+  reason: string;
+  likelihood: DropOffAIReasonLikelihood;
+  stage: string;
+}
+
+export interface DropOffHypothesis {
+  hypothesis: string;
+  rationale: string;
+  stage: string;
+}
+
+export type DropOffSuggestedExperimentEffort =
+  (typeof DropOffSuggestedExperimentEffort)[keyof typeof DropOffSuggestedExperimentEffort];
+
+export const DropOffSuggestedExperimentEffort = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+} as const;
+
+export interface DropOffSuggestedExperiment {
+  title: string;
+  hypothesis: string;
+  expectedImpact: string;
+  effort: DropOffSuggestedExperimentEffort;
+}
+
+export interface DropOffAIAnalysis {
+  topDropOffStage: string;
+  dropOffReasons: DropOffAIReason[];
+  hypotheses: DropOffHypothesis[];
+  suggestedExperiment: DropOffSuggestedExperiment;
+  generatedAt: string;
+}
+
 export interface DiagnoseInput {
   /** The stage to focus the diagnosis on (e.g. "checkout", "cart", "banner") */
   funnelStage: string;
