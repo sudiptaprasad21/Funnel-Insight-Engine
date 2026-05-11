@@ -26,8 +26,8 @@ router.get("/analytics/funnel-summary", async (req, res): Promise<void> => {
   const saleItemViews = countByType("sale_item_view");
   const browseOnlyCount = countByType("browse_only");
   const addToCart = countByType("add_to_cart") + countByType("wishlist_to_cart");
-  const addToWishlist = events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata !== '{"action":"remove"}').length;
-  const removeFromWishlist = countByType("remove_from_wishlist") + events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata === '{"action":"remove"}').length;
+  const addToWishlist = countByType("add_to_wishlist");
+  const removeFromWishlist = countByType("remove_from_wishlist");
   const wishlistToCart = countByType("wishlist_to_cart");
   const productDetailViews = countByType("product_detail_view");
   const nappySubscriptions = countByType("nappy_subscription_click");
@@ -301,14 +301,28 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
       .sort((a, b) => b.dropOff - a.dropOff)[0]?.stage ??
     "Banner Click";
 
-  const dropOffReasons = [
-    { reason: "Price too high / no discount visible", count: 89, percentage: 31 },
-    { reason: "Distracted / browsed only", count: 72, percentage: 25 },
-    { reason: "Shipping cost surprise at checkout", count: 54, percentage: 19 },
-    { reason: "No guest checkout option", count: 38, percentage: 13 },
-    { reason: "Payment method not available", count: 22, percentage: 8 },
-    { reason: "Other / unknown", count: 12, percentage: 4 },
+  // Compute real drop-off reason counts from actual session data
+  const cartAbandonSessions = sessionSet(["cart_abandon"]);
+  const noEngagement        = Math.max(0, pageViews - bannerClicks);
+  const viewedNotCarted     = Math.max(0, productViews - addToCart);
+  const checkoutAbandons    = Math.max(0, checkouts - purchases);
+  const subIntentDropoff    = Math.max(0, subscriptionIntents - subscribed);
+
+  const totalDropped = noEngagement + viewedNotCarted + cartAbandonSessions + checkoutAbandons + subIntentDropoff;
+  const safeTotal = Math.max(totalDropped, 1);
+  const pctOf = (n: number) => Math.round((n / safeTotal) * 100);
+
+  const rawReasons = [
+    { reason: "Left without engaging with banner — low initial hook or awareness", count: noEngagement, percentage: pctOf(noEngagement) },
+    { reason: "Viewed products but did not add to cart — price or relevance friction", count: viewedNotCarted, percentage: pctOf(viewedNotCarted) },
+    { reason: "Added to cart then abandoned — shipping cost surprise or checkout friction", count: cartAbandonSessions, percentage: pctOf(cartAbandonSessions) },
+    { reason: "Started checkout but did not complete purchase — payment or UX friction", count: checkoutAbandons, percentage: pctOf(checkoutAbandons) },
+    { reason: "Had subscription intent but did not subscribe — commitment or pricing friction", count: subIntentDropoff, percentage: pctOf(subIntentDropoff) },
   ];
+
+  const dropOffReasons = rawReasons.filter((r) => r.count > 0).length > 0
+    ? rawReasons.filter((r) => r.count > 0)
+    : [{ reason: "No significant drop-off detected yet — keep collecting sessions", count: 0, percentage: 0 }];
 
   res.json({ stages, topDropOffStage, dropOffReasons });
 });

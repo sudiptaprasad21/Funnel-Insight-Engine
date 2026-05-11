@@ -9,7 +9,7 @@ import {
   ListCustomersResponse,
   GetCustomerResponse,
 } from "@workspace/api-zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, SQL } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -22,21 +22,21 @@ router.get("/customers", async (req, res): Promise<void> => {
 
   const { type, limit } = query.data;
 
-  let customers = await db
+  let whereCondition: SQL | undefined = undefined;
+  if (type === "repeat") {
+    whereCondition = eq(customersTable.isRepeat, true);
+  } else if (type === "new") {
+    whereCondition = eq(customersTable.isRepeat, false);
+  } else if (type === "subscribed") {
+    whereCondition = eq(customersTable.isSubscribed, true);
+  }
+
+  const customers = await db
     .select()
     .from(customersTable)
+    .where(whereCondition)
     .orderBy(desc(customersTable.createdAt))
     .limit(limit ?? 50);
-
-  if (type && type !== "all") {
-    if (type === "repeat") {
-      customers = customers.filter((c) => c.isRepeat);
-    } else if (type === "new") {
-      customers = customers.filter((c) => !c.isRepeat);
-    } else if (type === "subscribed") {
-      customers = customers.filter((c) => c.isSubscribed);
-    }
-  }
 
   res.json(ListCustomersResponse.parse(customers));
 });

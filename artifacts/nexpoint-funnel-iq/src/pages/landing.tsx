@@ -156,11 +156,18 @@ export default function LandingPage() {
   const handleSubscribe = async () => {
     const customerId = getStoredCustomerId();
     if (customerId) {
-      await fetch(`/api/customers/${customerId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isSubscribed: true, subscriptionPlan: "nappy-monthly" }),
-      });
+      try {
+        const resp = await fetch(`/api/customers/${customerId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isSubscribed: true, subscriptionPlan: "nappy-monthly" }),
+        });
+        if (!resp.ok) {
+          console.error("Subscription PATCH failed:", resp.status);
+        }
+      } catch (err) {
+        console.error("Subscription PATCH error:", err);
+      }
     }
     trackFunnelEvent("subscribed");
     toast({ title: "Subscription started!", description: "You'll receive your first delivery within 3–5 days." });
