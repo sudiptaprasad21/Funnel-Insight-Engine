@@ -297,6 +297,24 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
         : 0;
   }
 
+  // Subscription Intent: true drop-off = sessions that had intent but never subscribed.
+  // Sessions that went on to subscribe are NOT drop-offs — they completed the subscription path.
+  const subIntentIdx = stages.findIndex((s) => s.stage === "Subscription Intent");
+  if (subIntentIdx >= 0) {
+    const intents = stages[subIntentIdx].users;
+    const trueDropOff = Math.max(0, intents - subscribed);
+    stages[subIntentIdx].dropOff = trueDropOff;
+    stages[subIntentIdx].dropOffRate =
+      intents > 0 ? parseFloat(((trueDropOff / intents) * 100).toFixed(1)) : 0;
+  }
+
+  // Subscribed is a terminal conversion stage — there is no further step to drop off to.
+  const subscribedIdx = stages.findIndex((s) => s.stage === "Subscribed");
+  if (subscribedIdx >= 0) {
+    stages[subscribedIdx].dropOff = 0;
+    stages[subscribedIdx].dropOffRate = 0;
+  }
+
   const topDropOffStage =
     stages.slice(0, -1).sort((a, b) => b.dropOff - a.dropOff)[0]?.stage ??
     "Banner Click";

@@ -124,8 +124,8 @@ export default function DashboardPage() {
                         const isLast = i === dropOff.stages.length - 1;
                         const hasUsers = stage.users > 0;
                         const pct = top > 0 ? (stage.users / top) * 100 : 0;
-                        const dropped = next ? Math.max(0, stage.users - next.users) : 0;
-                        const droppedPct = stage.users > 0 ? (dropped / stage.users) * 100 : 0;
+                        const dropped = stage.dropOff ?? 0;
+                        const droppedPct = stage.dropOffRate ?? 0;
                         const skipped = next && hasUsers && next.users > stage.users;
                         return (
                           <div key={stage.stage}>
