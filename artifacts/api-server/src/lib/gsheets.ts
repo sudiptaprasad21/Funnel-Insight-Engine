@@ -45,6 +45,68 @@ export async function clearAndWriteSheet(
   return result.updates?.updatedRows ?? rows.length;
 }
 
+/** Ensure a named tab exists in the spreadsheet, creating it if absent. */
+export async function ensureSheetTab(
+  spreadsheetId: string,
+  tabTitle: string,
+): Promise<void> {
+  const connectors = new ReplitConnectors();
+  // Fetch existing sheet metadata
+  const metaResp = await connectors.proxy(
+    "google-sheet",
+    `/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+    { method: "GET" },
+  );
+  const meta = (await metaResp.json()) as {
+    sheets?: { properties: { title: string } }[];
+  };
+  const exists = (meta.sheets ?? []).some((s) => s.properties.title === tabTitle);
+  if (!exists) {
+    await connectors.proxy(
+      "google-sheet",
+      `/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          requests: [{ addSheet: { properties: { title: tabTitle } } }],
+        }),
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+}
+
+/** Clear a named tab and write rows into it. */
+export async function clearAndWriteNamedSheet(
+  spreadsheetId: string,
+  tabTitle: string,
+  rows: (string | number)[][],
+): Promise<number> {
+  const connectors = new ReplitConnectors();
+  const range = `${tabTitle}!A1:Z1000`;
+
+  await connectors.proxy(
+    "google-sheet",
+    `/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:clear`,
+    { method: "POST", headers: { "Content-Type": "application/json" } },
+  );
+
+  const appendResp = await connectors.proxy(
+    "google-sheet",
+    `/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`${tabTitle}!A1`)}:append?valueInputOption=USER_ENTERED&insertDataOption=OVERWRITE`,
+    {
+      method: "POST",
+      body: JSON.stringify({ values: rows }),
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+
+  const result = (await appendResp.json()) as {
+    updates?: { updatedRows?: number };
+  };
+  return result.updates?.updatedRows ?? rows.length;
+}
+
 export function sheetUrl(spreadsheetId: string): string {
   return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
 }

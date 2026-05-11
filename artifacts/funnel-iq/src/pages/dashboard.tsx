@@ -10,6 +10,7 @@ import {
   useGetSheetInfo,
   getGetSheetInfoQueryKey,
   useSyncToGSheet,
+  useSyncConversionRatesToGSheet,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,17 @@ export default function DashboardPage() {
       },
       onError: () => {
         toast({ title: "Sync Failed", description: "Could not sync to Google Sheets.", variant: "destructive" });
+      },
+    },
+  });
+
+  const syncConversionRates = useSyncConversionRatesToGSheet({
+    mutation: {
+      onSuccess: (data) => {
+        toast({ title: "Conversion Rates synced", description: `${data.rowsWritten} rows written to "Conversion Rates" tab.` });
+      },
+      onError: () => {
+        toast({ title: "Sync Failed", description: "Could not sync conversion rates.", variant: "destructive" });
       },
     },
   });
@@ -382,8 +394,38 @@ export default function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Conversion Rates</CardTitle>
-                <CardDescription>How efficiently each stage of the funnel converts to the next</CardDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle>Conversion Rates</CardTitle>
+                    <CardDescription>How efficiently each stage of the funnel converts to the next</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => syncConversionRates.mutate({})}
+                      disabled={syncConversionRates.isPending}
+                      title="Sync to Google Sheets"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"
+                    >
+                      {syncConversionRates.isPending
+                        ? <RefreshCw className="h-4 w-4 animate-spin" />
+                        : <RefreshCw className="h-4 w-4" />}
+                    </button>
+                    {sheetInfo?.sheetUrl && (
+                      <a
+                        href={sheetInfo.sheetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Open Google Sheet"
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Exports to "Conversion Rates" tab in the same Google Sheet
+                </p>
               </CardHeader>
               <CardContent>
                 {summaryLoading ? (

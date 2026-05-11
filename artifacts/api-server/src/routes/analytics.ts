@@ -7,7 +7,7 @@ import {
   settingsTable,
 } from "@workspace/db";
 import { sql, count, avg, eq } from "drizzle-orm";
-import { createSpreadsheet, clearAndWriteSheet, sheetUrl } from "../lib/gsheets";
+import { createSpreadsheet, clearAndWriteSheet, clearAndWriteNamedSheet, ensureSheetTab, sheetUrl } from "../lib/gsheets";
 
 const router: IRouter = Router();
 
@@ -439,6 +439,98 @@ router.post("/analytics/sync-gsheet", async (req, res): Promise<void> => {
   await db
     .insert(settingsTable)
     .values({ key: "gsheet_last_synced", value: now })
+    .onConflictDoUpdate({ target: settingsTable.key, set: { value: now, updatedAt: new Date() } });
+
+  res.json({
+    spreadsheetId,
+    sheetUrl: sheetUrl(spreadsheetId),
+    syncedAt: now,
+    rowsWritten,
+  });
+});
+
+// ─── Sync Conversion Rates to Google Sheets ───────────────────────────────────
+router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void> => {
+  const events = await db.select().from(funnelEventsTable);
+
+  const countByType = (type: string) =>
+    events.filter((e) => e.eventType === type).length;
+
+  const sessionSet = (types: string[]) =>
+    new Set(events.filter((e) => types.includes(e.eventType)).map((e) => e.sessionId)).size;
+
+  const totalVisitors  = new Set(events.map((e) => e.sessionId)).size;
+  const productViews   = countByType("product_view") + countByType("sale_item_view") + countByType("browse_only");
+  const addToCart      = sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]);
+  const addToWishlist  = events.filter((e) => e.eventType === "add_to_wishlist" && e.metadata !== '{"action":"remove"}').length;
+  const wishlistToCart = countByType("wishlist_to_cart");
+  const purchases      = countByType("purchase");
+  const cartAbandons   = countByType("cart_abandon");
+  const intendedSubs   = countByType("intended_subscription");
+  const subscriptions  = countByType("subscribed");
+  const browseOnly     = countByType("browse_only");
+
+  const pct = (num: number, den: number) =>
+    den > 0 ? Math.min(100, Math.round((num / den) * 100)) : 0;
+
+  const now = new Date().toISOString();
+
+  const headers = ["Metric", "Value (%)", "Numerator", "Denominator", "Status", "Synced At"];
+  const status = (v: number, higherIsBetter: boolean, good: number, warn: number) => {
+    if (higherIsBetter) {
+      if (v >= good) return "Healthy";
+      if (v >= warn) return "Watch";
+      return "Needs Attention";
+    } else {
+      if (v < good) return "Healthy";
+      if (v < warn) return "Watch";
+      return "Needs Attention";
+    }
+  };
+
+  const convRates = [
+    { label: "Product → Cart Rate",     value: pct(addToCart, productViews),      num: addToCart,      den: productViews,   higherIsBetter: true,  good: 8,  warn: 4  },
+    { label: "Cart → Purchase Rate",    value: pct(purchases, addToCart),          num: purchases,      den: addToCart,      higherIsBetter: true,  good: 60, warn: 40 },
+    { label: "Wishlist Utilisation",    value: pct(wishlistToCart, addToWishlist), num: wishlistToCart, den: addToWishlist,  higherIsBetter: true,  good: 50, warn: 20 },
+    { label: "Cart Abandon Rate",       value: pct(cartAbandons, addToCart),       num: cartAbandons,   den: addToCart,      higherIsBetter: false, good: 30, warn: 60 },
+    { label: "Subscription Conversion", value: pct(subscriptions, intendedSubs),   num: subscriptions,  den: intendedSubs,   higherIsBetter: true,  good: 50, warn: 25 },
+    { label: "Browse-only Rate",        value: pct(browseOnly, totalVisitors),     num: browseOnly,     den: totalVisitors,  higherIsBetter: false, good: 30, warn: 60 },
+  ];
+
+  const dataRows: (string | number)[][] = convRates.map((m) => [
+    m.label,
+    `${m.value}%`,
+    m.num,
+    m.den,
+    status(m.value, m.higherIsBetter, m.good, m.warn),
+    now,
+  ]);
+
+  const rows: (string | number)[][] = [headers, ...dataRows];
+
+  // Reuse (or create) the same spreadsheet as funnel stages
+  const existing = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "gsheet_spreadsheet_id"));
+
+  let spreadsheetId: string;
+  if (existing.length && existing[0]) {
+    spreadsheetId = existing[0].value;
+  } else {
+    spreadsheetId = await createSpreadsheet("Nexpoint Funnel IQ — Funnel Stages");
+    await db
+      .insert(settingsTable)
+      .values({ key: "gsheet_spreadsheet_id", value: spreadsheetId })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value: spreadsheetId } });
+  }
+
+  await ensureSheetTab(spreadsheetId, "Conversion Rates");
+  const rowsWritten = await clearAndWriteNamedSheet(spreadsheetId, "Conversion Rates", rows);
+
+  await db
+    .insert(settingsTable)
+    .values({ key: "gsheet_conversion_last_synced", value: now })
     .onConflictDoUpdate({ target: settingsTable.key, set: { value: now, updatedAt: new Date() } });
 
   res.json({

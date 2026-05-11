@@ -837,6 +837,87 @@ export const useSyncToGSheet = <
 };
 
 /**
+ * @summary Sync conversion rate metrics to a dedicated tab in the Google Sheet
+ */
+export const getSyncConversionRatesToGSheetUrl = () => {
+  return `/api/analytics/sync-gsheet-conversion`;
+};
+
+export const syncConversionRatesToGSheet = async (
+  options?: RequestInit,
+): Promise<SheetSyncResult> => {
+  return customFetch<SheetSyncResult>(getSyncConversionRatesToGSheetUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncConversionRatesToGSheetMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncConversionRatesToGSheet>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncConversionRatesToGSheet>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["syncConversionRatesToGSheet"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncConversionRatesToGSheet>>,
+    void
+  > = () => {
+    return syncConversionRatesToGSheet(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncConversionRatesToGSheetMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncConversionRatesToGSheet>>
+>;
+
+export type SyncConversionRatesToGSheetMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Sync conversion rate metrics to a dedicated tab in the Google Sheet
+ */
+export const useSyncConversionRatesToGSheet = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncConversionRatesToGSheet>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof syncConversionRatesToGSheet>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSyncConversionRatesToGSheetMutationOptions(options));
+};
+
+/**
  * @summary List customers with subscription and repeat status
  */
 export const getListCustomersUrl = (params?: ListCustomersParams) => {
