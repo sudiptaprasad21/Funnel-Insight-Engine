@@ -184,7 +184,7 @@ export default function LandingPage() {
       <div className="bg-slate-900 text-white p-3 text-center text-sm font-medium flex items-center justify-center gap-4">
         <span>Happy Mom demo store — every interaction is tracked in real time.</span>
         <Button asChild variant="secondary" size="sm" className="h-8">
-          <a href="/funnel-iq/dashboard" data-testid="link-view-analytics">
+          <a href="/manager-view/dashboard" data-testid="link-view-analytics">
             View Campaign Analytics
           </a>
         </Button>
@@ -603,7 +603,7 @@ export default function LandingPage() {
         <div className="pt-8 border-t border-slate-800 text-sm flex flex-col items-center gap-4">
           <p>© 2026 Happy Mom Demo Store. All rights reserved.</p>
           <Button asChild variant="link" className="text-slate-300 hover:text-white">
-            <a href="/funnel-iq/dashboard" data-testid="link-footer-analytics">
+            <a href="/manager-view/dashboard" data-testid="link-footer-analytics">
               Growth Manager Login →
             </a>
           </Button>
