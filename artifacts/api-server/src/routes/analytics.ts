@@ -92,9 +92,14 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
   const discountItemViews = events.filter(
     (e) => e.eventType === "sale_item_view",
   ).length;
-  const discountItemPurchases = events.filter(
-    (e) => e.eventType === "purchase",
-  ).length;
+  const discountItemPurchases = events.filter((e) => {
+    if (e.eventType !== "purchase") return false;
+    try {
+      return e.metadata ? JSON.parse(e.metadata).hasSaleItems === true : false;
+    } catch {
+      return false;
+    }
+  }).length;
   const browseOnlyVisitors = events.filter(
     (e) => e.eventType === "browse_only",
   ).length;
@@ -124,28 +129,42 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
 router.get("/analytics/traffic", async (req, res): Promise<void> => {
   const events = await db.select().from(funnelEventsTable);
 
-  const pageViews = events.filter((e) => e.eventType === "page_view");
-  const sessions = new Set(events.map((e) => e.sessionId));
-
   const now = new Date();
-  const activeNow = Math.max(1, Math.floor(sessions.size * 0.08));
-  const totalToday = pageViews.filter((e) => {
-    const d = new Date(e.createdAt);
-    return d.toDateString() === now.toDateString();
-  }).length;
+  const weekAgo = new Date(now);
+  weekAgo.setDate(now.getDate() - 7);
 
-  // Hourly traffic for today — real counts only
+  // Unique sessions today (consistent unit for totalToday and totalThisWeek)
+  const todaySessions = new Set(
+    events
+      .filter((e) => new Date(e.createdAt).toDateString() === now.toDateString())
+      .map((e) => e.sessionId),
+  );
+  const weekSessions = new Set(
+    events
+      .filter((e) => new Date(e.createdAt) >= weekAgo)
+      .map((e) => e.sessionId),
+  );
+
+  const activeNow = Math.max(0, Math.floor(weekSessions.size * 0.08));
+
+  // Hourly traffic for today only — unique sessions per hour
+  const pageViewsToday = events.filter(
+    (e) =>
+      e.eventType === "page_view" &&
+      new Date(e.createdAt).toDateString() === now.toDateString(),
+  );
   const hourlyTraffic = Array.from({ length: 12 }, (_, i) => {
     const hour = 8 + i;
     const label = `${hour}:00`;
-    const cnt = pageViews.filter((e) => {
-      const h = new Date(e.createdAt).getHours();
-      return h === hour;
-    }).length;
+    const cnt = new Set(
+      pageViewsToday
+        .filter((e) => new Date(e.createdAt).getHours() === hour)
+        .map((e) => e.sessionId),
+    ).size;
     return { label, visitors: cnt };
   });
 
-  // Daily traffic last 7 days — real counts only
+  // Daily traffic last 7 days — unique sessions per day
   const dailyTraffic = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(now);
     d.setDate(now.getDate() - (6 - i));
@@ -153,17 +172,18 @@ router.get("/analytics/traffic", async (req, res): Promise<void> => {
       weekday: "short",
       day: "numeric",
     });
-    const cnt = pageViews.filter((e) => {
-      const evtDate = new Date(e.createdAt);
-      return evtDate.toDateString() === d.toDateString();
-    }).length;
+    const cnt = new Set(
+      events
+        .filter((e) => new Date(e.createdAt).toDateString() === d.toDateString())
+        .map((e) => e.sessionId),
+    ).size;
     return { label, visitors: cnt };
   });
 
   res.json({
-    activeNow: Math.max(0, Math.floor(sessions.size * 0.08)),
-    totalToday,
-    totalThisWeek: sessions.size,
+    activeNow,
+    totalToday: todaySessions.size,
+    totalThisWeek: weekSessions.size,
     hourlyTraffic,
     dailyTraffic,
   });
