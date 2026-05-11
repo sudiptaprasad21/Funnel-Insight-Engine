@@ -35,6 +35,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
+  /health/audit:
+    get:
+      operationId: getHealthReport
+      tags: [health]
+      summary: Get latest cached App Health audit report
+      responses:
+        "200":
+          description: Cached health report (or fresh if none cached)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReport"
+    post:
+      operationId: runHealthAudit
+      tags: [health]
+      summary: Force a fresh App Health audit and persist the result
+      responses:
+        "200":
+          description: Fresh health report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthReport"
+
   # ─── Event Tracking ──────────────────────────────────────────────────────────
   /events:
     post:
@@ -797,3 +821,34 @@ components:
       type: object
       properties:
         status: { type: string, enum: [proposed, running, completed, archived] }
+
+    HealthCheck:
+      type: object
+      required: [name, status, value, detail]
+      properties:
+        name:   { type: string }
+        status: { type: string, enum: [pass, warn, fail] }
+        value:  { oneOf: [{ type: string }, { type: number }] }
+        detail: { type: string }
+
+    HealthCategory:
+      type: object
+      required: [name, icon, score, checks]
+      properties:
+        name:   { type: string }
+        icon:   { type: string }
+        score:  { type: integer }
+        checks:
+          type: array
+          items: { $ref: "#/components/schemas/HealthCheck" }
+
+    HealthReport:
+      type: object
+      required: [generatedAt, overallScore, overallGrade, categories]
+      properties:
+        generatedAt:  { type: string, format: date-time }
+        overallScore: { type: integer }
+        overallGrade: { type: string }
+        categories:
+          type: array
+          items: { $ref: "#/components/schemas/HealthCategory" }

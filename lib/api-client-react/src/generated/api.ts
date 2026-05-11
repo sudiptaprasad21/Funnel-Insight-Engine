@@ -29,6 +29,7 @@ import type {
   Experiment,
   FunnelEvent,
   FunnelSummary,
+  HealthReport,
   HealthStatus,
   ListCustomersParams,
   ListEventsParams,
@@ -125,6 +126,162 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get latest cached App Health audit report
+ */
+export const getGetHealthReportUrl = () => {
+  return `/api/health/audit`;
+};
+
+export const getHealthReport = async (
+  options?: RequestInit,
+): Promise<HealthReport> => {
+  return customFetch<HealthReport>(getGetHealthReportUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetHealthReportQueryKey = () => {
+  return [`/api/health/audit`] as const;
+};
+
+export const getGetHealthReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHealthReport>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getHealthReport>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHealthReportQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHealthReport>>> = ({
+    signal,
+  }) => getHealthReport({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getHealthReport>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetHealthReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getHealthReport>>
+>;
+export type GetHealthReportQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get latest cached App Health audit report
+ */
+
+export function useGetHealthReport<
+  TData = Awaited<ReturnType<typeof getHealthReport>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getHealthReport>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetHealthReportQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Force a fresh App Health audit and persist the result
+ */
+export const getRunHealthAuditUrl = () => {
+  return `/api/health/audit`;
+};
+
+export const runHealthAudit = async (
+  options?: RequestInit,
+): Promise<HealthReport> => {
+  return customFetch<HealthReport>(getRunHealthAuditUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRunHealthAuditMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof runHealthAudit>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof runHealthAudit>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["runHealthAudit"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof runHealthAudit>>,
+    void
+  > = () => {
+    return runHealthAudit(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RunHealthAuditMutationResult = NonNullable<
+  Awaited<ReturnType<typeof runHealthAudit>>
+>;
+
+export type RunHealthAuditMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Force a fresh App Health audit and persist the result
+ */
+export const useRunHealthAudit = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof runHealthAudit>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof runHealthAudit>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getRunHealthAuditMutationOptions(options));
+};
 
 /**
  * @summary Track a funnel event (click, view, add_to_cart, etc.)

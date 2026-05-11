@@ -349,6 +349,36 @@ export interface UpdateExperimentBody {
   status?: UpdateExperimentBodyStatus;
 }
 
+export type HealthCheckStatus =
+  (typeof HealthCheckStatus)[keyof typeof HealthCheckStatus];
+
+export const HealthCheckStatus = {
+  pass: "pass",
+  warn: "warn",
+  fail: "fail",
+} as const;
+
+export interface HealthCheck {
+  name: string;
+  status: HealthCheckStatus;
+  value: string | number;
+  detail: string;
+}
+
+export interface HealthCategory {
+  name: string;
+  icon: string;
+  score: number;
+  checks: HealthCheck[];
+}
+
+export interface HealthReport {
+  generatedAt: string;
+  overallScore: number;
+  overallGrade: string;
+  categories: HealthCategory[];
+}
+
 export type ListEventsParams = {
   eventType?: string;
   sessionId?: string;

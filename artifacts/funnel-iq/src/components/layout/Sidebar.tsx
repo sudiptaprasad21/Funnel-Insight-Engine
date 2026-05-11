@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Package, ArrowLeft, FlaskConical } from "lucide-react";
+import { LayoutDashboard, Users, Package, ArrowLeft, FlaskConical, HeartPulse } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -10,6 +10,7 @@ export function Sidebar() {
     { href: "/experiments", label: "Experiments", icon: FlaskConical },
     { href: "/customers", label: "Customers", icon: Users },
     { href: "/products", label: "Products", icon: Package },
+    { href: "/health", label: "App Health", icon: HeartPulse },
   ];
 
   return (

@@ -15,6 +15,54 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Get latest cached App Health audit report
+ */
+export const GetHealthReportResponse = zod.object({
+  generatedAt: zod.coerce.date(),
+  overallScore: zod.number(),
+  overallGrade: zod.string(),
+  categories: zod.array(
+    zod.object({
+      name: zod.string(),
+      icon: zod.string(),
+      score: zod.number(),
+      checks: zod.array(
+        zod.object({
+          name: zod.string(),
+          status: zod.enum(["pass", "warn", "fail"]),
+          value: zod.union([zod.string(), zod.number()]),
+          detail: zod.string(),
+        }),
+      ),
+    }),
+  ),
+});
+
+/**
+ * @summary Force a fresh App Health audit and persist the result
+ */
+export const RunHealthAuditResponse = zod.object({
+  generatedAt: zod.coerce.date(),
+  overallScore: zod.number(),
+  overallGrade: zod.string(),
+  categories: zod.array(
+    zod.object({
+      name: zod.string(),
+      icon: zod.string(),
+      score: zod.number(),
+      checks: zod.array(
+        zod.object({
+          name: zod.string(),
+          status: zod.enum(["pass", "warn", "fail"]),
+          value: zod.union([zod.string(), zod.number()]),
+          detail: zod.string(),
+        }),
+      ),
+    }),
+  ),
+});
+
+/**
  * @summary Track a funnel event (click, view, add_to_cart, etc.)
  */
 export const TrackEventBody = zod.object({
