@@ -175,9 +175,7 @@ export default function CustomersPage() {
                 <div>
                   <CardTitle>Customer Trends</CardTitle>
                   <CardDescription>
-                    {period === "daily" ? "New customers, repeat buyers, and subscriptions — last 7 days" :
-                     period === "weekly" ? "New customers, repeat buyers, and subscriptions — last 8 weeks" :
-                     "New customers, repeat buyers, and subscriptions — last 5 months"}
+                    New customers, repeat buyers, and subscriptions
                   </CardDescription>
                 </div>
                 <div className="flex items-center rounded-lg border border-border overflow-hidden shrink-0 text-xs font-medium">
@@ -214,7 +212,6 @@ export default function CustomersPage() {
                         fontSize: 13,
                       }}
                     />
-                    <Legend />
                     <Bar dataKey="newCustomers" name="New Customers" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="repeatCustomers" name="Repeat Customers" fill="#a855f7" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="subscriptions" name="Subscriptions" fill="#22c55e" radius={[4, 4, 0, 0]} />
@@ -223,6 +220,18 @@ export default function CustomersPage() {
               ) : (
                 <div className="h-[280px] flex items-center justify-center text-muted-foreground">No trend data</div>
               )}
+              <div className="flex items-center justify-center gap-5 mt-2">
+                {[
+                  { color: "#3b82f6", label: "New" },
+                  { color: "#a855f7", label: "Repeat" },
+                  { color: "#22c55e", label: "Subscriptions" },
+                ].map(({ color, label }) => (
+                  <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="inline-block w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                    {label}
+                  </span>
+                ))}
+              </div>
             </CardContent>
           </Card>
 
