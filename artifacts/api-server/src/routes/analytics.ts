@@ -261,64 +261,28 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const sessionSet = (types: string[]) =>
     new Set(events.filter((e) => types.includes(e.eventType)).map((e) => e.sessionId)).size;
 
-  const pageViews   = new Set(events.map((e) => e.sessionId)).size;
-  const bannerClicks = sessionSet(["banner_click"]);
-  const productViews = sessionSet(["product_view", "sale_item_view", "browse_only"]);
+  const pageViews          = new Set(events.map((e) => e.sessionId)).size;
+  const bannerClicks       = sessionSet(["banner_click"]);
+  const productViews       = sessionSet(["product_view", "sale_item_view", "browse_only"]);
   const productDetailViews = sessionSet(["product_detail_view"]);
-  const addToWishlist = sessionSet(["add_to_wishlist"]);
-  const addToCart   = sessionSet(["add_to_cart", "wishlist_to_cart"]);
-  const checkouts   = sessionSet(["checkout_start"]);
-  const purchases   = sessionSet(["purchase", "subscribed"]);
+  const subscriptionIntents = sessionSet(["intended_subscription"]);
+  const addToWishlist      = sessionSet(["add_to_wishlist"]);
+  const addToCart          = sessionSet(["add_to_cart", "wishlist_to_cart"]);
+  const checkouts          = sessionSet(["checkout_start"]);
+  const purchases          = sessionSet(["purchase"]);
+  const subscribed         = sessionSet(["subscribed"]);
 
   const stages = [
-    {
-      stage: "Landing Page View",
-      users: pageViews,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Banner Click",
-      users: bannerClicks,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Product View",
-      users: productViews,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Product Detail View",
-      users: productDetailViews,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Wishlist Save",
-      users: addToWishlist,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Add to Cart",
-      users: addToCart,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Checkout",
-      users: checkouts,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
-    {
-      stage: "Converted",
-      users: purchases,
-      dropOff: 0,
-      dropOffRate: 0,
-    },
+    { stage: "Landing Page View",    users: pageViews,           dropOff: 0, dropOffRate: 0 },
+    { stage: "Banner Click",         users: bannerClicks,        dropOff: 0, dropOffRate: 0 },
+    { stage: "Product View",         users: productViews,        dropOff: 0, dropOffRate: 0 },
+    { stage: "Product Detail View",  users: productDetailViews,  dropOff: 0, dropOffRate: 0 },
+    { stage: "Subscription Intent",  users: subscriptionIntents, dropOff: 0, dropOffRate: 0 },
+    { stage: "Wishlist Save",        users: addToWishlist,       dropOff: 0, dropOffRate: 0 },
+    { stage: "Add to Cart",          users: addToCart,           dropOff: 0, dropOffRate: 0 },
+    { stage: "Checkout",             users: checkouts,           dropOff: 0, dropOffRate: 0 },
+    { stage: "Purchased",            users: purchases,           dropOff: 0, dropOffRate: 0 },
+    { stage: "Subscribed",           users: subscribed,          dropOff: 0, dropOffRate: 0 },
   ];
 
   // Calculate drop-off between stages — clamp to 0 (non-monotonic funnels
