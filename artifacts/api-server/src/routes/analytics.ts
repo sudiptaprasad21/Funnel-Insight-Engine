@@ -376,34 +376,55 @@ router.get("/analytics/sheet-info", async (req, res): Promise<void> => {
 router.post("/analytics/sync-gsheet", async (req, res): Promise<void> => {
   // Fetch all events and use the same sessionSet logic as the drop-off dashboard
   // so the sheet values are always identical to what the bar chart shows.
-  const events = await db.select().from(funnelEventsTable);
+  const [events, customers] = await Promise.all([
+    db.select().from(funnelEventsTable),
+    db.select().from(customersTable),
+  ]);
+
+  const customerMap = new Map(customers.map((c) => [c.id, c]));
 
   const sessionSet = (types: string[]) =>
     new Set(events.filter((e) => types.includes(e.eventType)).map((e) => e.sessionId)).size;
 
+  const stageCustomers = (types: string[]): { names: string; emails: string; count: number } => {
+    const ids = new Set(
+      events
+        .filter((e) => types.includes(e.eventType) && e.customerId != null)
+        .map((e) => e.customerId as number),
+    );
+    const matched = [...ids].map((id) => customerMap.get(id)).filter(Boolean) as typeof customers;
+    return {
+      count: matched.length,
+      names: matched.map((c) => c.name).join(", ") || "—",
+      emails: matched.map((c) => c.email).join(", ") || "—",
+    };
+  };
+
   const totalVisitors = new Set(events.map((e) => e.sessionId)).size;
   const totalVisitorsSafe = Math.max(totalVisitors, 1);
 
+  const allPageViewCustomers = stageCustomers(["page_view"]);
+
   const STAGES = [
-    { name: "Landing Page View",    users: totalVisitors },
-    { name: "Banner Click",         users: sessionSet(["banner_click"]) },
-    { name: "Product View",         users: sessionSet(["product_view", "sale_item_view", "browse_only"]) },
-    { name: "Product Detail View",  users: sessionSet(["product_detail_view"]) },
-    { name: "Wishlist Save",        users: sessionSet(["add_to_wishlist"]) },
-    { name: "Add to Cart",          users: sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]) },
-    { name: "Checkout / Purchased", users: sessionSet(["checkout_start", "purchase"]) },
-    { name: "Subscription Intent",  users: sessionSet(["intended_subscription"]) },
-    { name: "Subscribed",           users: sessionSet(["subscribed"]) },
+    { name: "Landing Page View",    users: totalVisitors,                                                  cust: allPageViewCustomers },
+    { name: "Banner Click",         users: sessionSet(["banner_click"]),                                   cust: stageCustomers(["banner_click"]) },
+    { name: "Product View",         users: sessionSet(["product_view", "sale_item_view", "browse_only"]), cust: stageCustomers(["product_view", "sale_item_view", "browse_only"]) },
+    { name: "Product Detail View",  users: sessionSet(["product_detail_view"]),                            cust: stageCustomers(["product_detail_view"]) },
+    { name: "Wishlist Save",        users: sessionSet(["add_to_wishlist"]),                                cust: stageCustomers(["add_to_wishlist"]) },
+    { name: "Add to Cart",          users: sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]), cust: stageCustomers(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]) },
+    { name: "Checkout / Purchased", users: sessionSet(["checkout_start", "purchase"]),                    cust: stageCustomers(["checkout_start", "purchase"]) },
+    { name: "Subscription Intent",  users: sessionSet(["intended_subscription"]),                         cust: stageCustomers(["intended_subscription"]) },
+    { name: "Subscribed",           users: sessionSet(["subscribed"]),                                    cust: stageCustomers(["subscribed"]) },
   ];
 
   const now = new Date().toISOString();
 
-  const headers = ["Stage", "Sessions", "% of Visitors", "Drop-off vs Previous", "Synced At"];
+  const headers = ["Stage", "Sessions", "% of Visitors", "Drop-off vs Previous", "Identified Customers", "Customer Names", "Customer Emails", "Synced At"];
   const dataRows: (string | number)[][] = STAGES.map((stage, i) => {
     const pct = ((stage.users / totalVisitorsSafe) * 100).toFixed(1);
     const prev = i > 0 ? STAGES[i - 1]!.users : totalVisitors;
     const dropOff = prev > stage.users ? prev - stage.users : 0;
-    return [stage.name, stage.users, `${pct}%`, dropOff, now];
+    return [stage.name, stage.users, `${pct}%`, dropOff, stage.cust.count, stage.cust.names, stage.cust.emails, now];
   });
 
   const rows: (string | number)[][] = [headers, ...dataRows];
@@ -442,7 +463,25 @@ router.post("/analytics/sync-gsheet", async (req, res): Promise<void> => {
 
 // ─── Sync Conversion Rates to Google Sheets ───────────────────────────────────
 router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void> => {
-  const events = await db.select().from(funnelEventsTable);
+  const [events, customers] = await Promise.all([
+    db.select().from(funnelEventsTable),
+    db.select().from(customersTable),
+  ]);
+
+  const customerMap = new Map(customers.map((c) => [c.id, c]));
+
+  const metricCustomers = (types: string[], extraFilter?: (e: typeof events[number]) => boolean): { names: string; emails: string } => {
+    const ids = new Set(
+      events
+        .filter((e) => types.includes(e.eventType) && e.customerId != null && (extraFilter ? extraFilter(e) : true))
+        .map((e) => e.customerId as number),
+    );
+    const matched = [...ids].map((id) => customerMap.get(id)).filter(Boolean) as typeof customers;
+    return {
+      names: matched.map((c) => c.name).join(", ") || "—",
+      emails: matched.map((c) => c.email).join(", ") || "—",
+    };
+  };
 
   const countByType = (type: string) =>
     events.filter((e) => e.eventType === type).length;
@@ -467,7 +506,7 @@ router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void>
 
   const now = new Date().toISOString();
 
-  const headers = ["Metric", "Value (%)", "Numerator", "Denominator", "Status", "Synced At"];
+  const headers = ["Metric", "Value (%)", "Numerator", "Denominator", "Status", "Customer Names", "Customer Emails", "Synced At"];
   const status = (v: number, higherIsBetter: boolean, good: number, warn: number) => {
     if (higherIsBetter) {
       if (v >= good) return "Healthy";
@@ -481,12 +520,12 @@ router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void>
   };
 
   const convRates = [
-    { label: "Product → Cart Rate",     value: pct(addToCart, productViews),      num: addToCart,      den: productViews,   higherIsBetter: true,  good: 8,  warn: 4  },
-    { label: "Cart → Purchase Rate",    value: pct(purchases, addToCart),          num: purchases,      den: addToCart,      higherIsBetter: true,  good: 60, warn: 40 },
-    { label: "Wishlist Utilisation",    value: pct(wishlistToCart, addToWishlist), num: wishlistToCart, den: addToWishlist,  higherIsBetter: true,  good: 50, warn: 20 },
-    { label: "Cart Abandon Rate",       value: pct(cartAbandons, addToCart),       num: cartAbandons,   den: addToCart,      higherIsBetter: false, good: 30, warn: 60 },
-    { label: "Subscription Conversion", value: pct(subscriptions, intendedSubs),   num: subscriptions,  den: intendedSubs,   higherIsBetter: true,  good: 50, warn: 25 },
-    { label: "Browse-only Rate",        value: pct(browseOnly, totalVisitors),     num: browseOnly,     den: totalVisitors,  higherIsBetter: false, good: 30, warn: 60 },
+    { label: "Product → Cart Rate",     value: pct(addToCart, productViews),      num: addToCart,      den: productViews,   higherIsBetter: true,  good: 8,  warn: 4,  cust: metricCustomers(["add_to_cart", "wishlist_to_cart"]) },
+    { label: "Cart → Purchase Rate",    value: pct(purchases, addToCart),          num: purchases,      den: addToCart,      higherIsBetter: true,  good: 60, warn: 40, cust: metricCustomers(["purchase"]) },
+    { label: "Wishlist Utilisation",    value: pct(wishlistToCart, addToWishlist), num: wishlistToCart, den: addToWishlist,  higherIsBetter: true,  good: 50, warn: 20, cust: metricCustomers(["wishlist_to_cart"]) },
+    { label: "Cart Abandon Rate",       value: pct(cartAbandons, addToCart),       num: cartAbandons,   den: addToCart,      higherIsBetter: false, good: 30, warn: 60, cust: metricCustomers(["cart_abandon"]) },
+    { label: "Subscription Conversion", value: pct(subscriptions, intendedSubs),   num: subscriptions,  den: intendedSubs,   higherIsBetter: true,  good: 50, warn: 25, cust: metricCustomers(["subscribed"]) },
+    { label: "Browse-only Rate",        value: pct(browseOnly, totalVisitors),     num: browseOnly,     den: totalVisitors,  higherIsBetter: false, good: 30, warn: 60, cust: metricCustomers(["browse_only"]) },
   ];
 
   const dataRows: (string | number)[][] = convRates.map((m) => [
@@ -495,6 +534,8 @@ router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void>
     m.num,
     m.den,
     status(m.value, m.higherIsBetter, m.good, m.warn),
+    m.cust.names,
+    m.cust.emails,
     now,
   ]);
 
