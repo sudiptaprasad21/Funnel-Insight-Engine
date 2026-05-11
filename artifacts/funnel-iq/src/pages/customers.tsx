@@ -287,7 +287,6 @@ export default function CustomersPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <CardTitle>Customer List</CardTitle>
-                <CardDescription>All campaign customers from the Mother's Day demo</CardDescription>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
