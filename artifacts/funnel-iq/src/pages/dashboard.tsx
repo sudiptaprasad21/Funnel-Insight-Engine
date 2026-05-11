@@ -132,8 +132,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-8">
-            <FunnelExplainer />
-
             <Card>
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
@@ -248,6 +246,8 @@ export default function DashboardPage() {
                 )}
               </CardContent>
             </Card>
+
+            <FunnelExplainer />
 
             {/* AI Drop-off Analysis */}
             <Card className="border-violet-200/60 bg-violet-50/20 dark:bg-violet-950/10">

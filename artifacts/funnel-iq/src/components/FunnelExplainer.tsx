@@ -37,7 +37,9 @@ export function FunnelExplainer() {
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <Info className="h-4 w-4 text-blue-500 shrink-0" />
-          <CardTitle className="text-base">How This Funnel Works</CardTitle>
+          <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
+            How to Read "Funnel Drop-off Analysis"?
+          </p>
         </div>
         <CardDescription className="text-xs leading-relaxed">
           Every visitor's session is tracked across two conversion paths. A{" "}
