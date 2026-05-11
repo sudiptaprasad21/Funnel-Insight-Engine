@@ -23,8 +23,8 @@ router.post("/ai/analyze-drop-off", async (req, res): Promise<void> => {
   const subIntents      = sessionSet(["intended_subscription"]);
   const wishlistSaves   = sessionSet(["add_to_wishlist"]);
   const cartAdds        = sessionSet(["add_to_cart", "wishlist_to_cart"]);
-  const checkouts       = sessionSet(["checkout_start"]);
   const purchases       = sessionSet(["purchase"]);
+  const checkouts       = sessionSet(["checkout_start", "purchase"]);
   const subscribed      = sessionSet(["subscribed"]);
   const cartAbandons    = events.filter((e) => e.eventType === "cart_abandon").length;
   const browseOnly      = sessionSet(["browse_only"]);

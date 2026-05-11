@@ -270,8 +270,10 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const subscriptionIntents = sessionSet(["intended_subscription"]);
   const addToWishlist      = sessionSet(["add_to_wishlist"]);
   const addToCart          = sessionSet(["add_to_cart", "wishlist_to_cart"]);
-  const checkouts          = sessionSet(["checkout_start"]);
   const purchases          = sessionSet(["purchase"]);
+  // A completed purchase implies a checkout — count any session that either
+  // explicitly started checkout or went straight to purchase.
+  const checkouts          = sessionSet(["checkout_start", "purchase"]);
   const subscribed         = sessionSet(["subscribed"]);
 
   const stages = [
