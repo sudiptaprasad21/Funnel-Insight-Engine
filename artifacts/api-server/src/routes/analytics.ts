@@ -269,7 +269,10 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
   const productDetailViews = sessionSet(["product_detail_view"]);
   const subscriptionIntents = sessionSet(["intended_subscription"]);
   const addToWishlist      = sessionSet(["add_to_wishlist"]);
-  const addToCart          = sessionSet(["add_to_cart", "wishlist_to_cart"]);
+  // Any session that reached checkout or purchase must have added to cart first
+  // (even if the add_to_cart event was not recorded), so include those event
+  // types here to keep the funnel monotonically non-increasing.
+  const addToCart          = sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]);
   const purchases          = sessionSet(["purchase"]);
   // A completed purchase implies a checkout — count any session that either
   // explicitly started checkout or went straight to purchase.
