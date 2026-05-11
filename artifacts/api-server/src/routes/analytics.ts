@@ -536,4 +536,63 @@ router.post("/analytics/sync-gsheet-conversion", async (req, res): Promise<void>
   });
 });
 
+// ─── Sync Customer List to Google Sheets ──────────────────────────────────────
+router.post("/analytics/sync-gsheet-customers", async (req, res): Promise<void> => {
+  const customers = await db.select().from(customersTable);
+
+  const now = new Date().toISOString();
+
+  const headers = ["Name", "Email", "Source", "Orders", "Total Spend (₹)", "Status", "Synced At"];
+
+  const dataRows: (string | number)[][] = customers.map((c) => {
+    const statuses: string[] = [];
+    if (c.isRepeat) statuses.push("Repeat");
+    if (c.isSubscribed) statuses.push("Subscribed");
+    if (!c.isRepeat && !c.isSubscribed) statuses.push("New");
+    return [
+      c.name ?? "",
+      c.email ?? "",
+      c.source ?? "—",
+      c.totalOrders ?? 0,
+      c.totalSpend ? Math.round(Number(c.totalSpend)) : 0,
+      statuses.join(", "),
+      now,
+    ];
+  });
+
+  const rows: (string | number)[][] = [headers, ...dataRows];
+
+  // Reuse the same spreadsheet as funnel stages
+  const existing = await db
+    .select()
+    .from(settingsTable)
+    .where(eq(settingsTable.key, "gsheet_spreadsheet_id"));
+
+  let spreadsheetId: string;
+  if (existing.length && existing[0]) {
+    spreadsheetId = existing[0].value;
+  } else {
+    spreadsheetId = await createSpreadsheet("Nexpoint Funnel IQ — Funnel Stages");
+    await db
+      .insert(settingsTable)
+      .values({ key: "gsheet_spreadsheet_id", value: spreadsheetId })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value: spreadsheetId } });
+  }
+
+  await ensureSheetTab(spreadsheetId, "Customer List");
+  const rowsWritten = await clearAndWriteNamedSheet(spreadsheetId, "Customer List", rows);
+
+  await db
+    .insert(settingsTable)
+    .values({ key: "gsheet_customers_last_synced", value: now })
+    .onConflictDoUpdate({ target: settingsTable.key, set: { value: now, updatedAt: new Date() } });
+
+  res.json({
+    spreadsheetId,
+    sheetUrl: sheetUrl(spreadsheetId),
+    syncedAt: now,
+    rowsWritten,
+  });
+});
+
 export default router;

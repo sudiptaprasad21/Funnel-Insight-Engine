@@ -4,11 +4,16 @@ import {
   getListCustomersQueryKey,
   useGetCustomerTrends,
   getGetCustomerTrendsQueryKey,
+  useSyncCustomersToGSheet,
+  useGetSheetInfo,
+  getGetSheetInfoQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, RefreshCw, Repeat2, Star } from "lucide-react";
+import { Users, RefreshCw, Repeat2, Star, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -21,6 +26,8 @@ import {
 } from "recharts";
 
 export default function CustomersPage() {
+  const { toast } = useToast();
+
   const { data: customers, isLoading: customersLoading } = useListCustomers(
     undefined,
     { query: { queryKey: getListCustomersQueryKey() } }
@@ -29,6 +36,39 @@ export default function CustomersPage() {
   const { data: trends, isLoading: trendsLoading } = useGetCustomerTrends({
     query: { queryKey: getGetCustomerTrendsQueryKey() },
   });
+
+  const { data: sheetInfo } = useGetSheetInfo({
+    query: { queryKey: getGetSheetInfoQueryKey() },
+  });
+
+  const [lastCustomerSynced, setLastCustomerSynced] = useState<string | null>(null);
+
+  const syncCustomers = useSyncCustomersToGSheet({
+    mutation: {
+      onSuccess: (data) => {
+        setLastCustomerSynced(data.syncedAt);
+        toast({
+          title: "Customer List synced",
+          description: `${data.rowsWritten} rows written to "Customer List" tab.`,
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Sync Failed",
+          description: "Could not sync customer list.",
+          variant: "destructive",
+        });
+      },
+    },
+  });
+
+  // Auto-sync every 30 minutes
+  useEffect(() => {
+    const id = setInterval(() => {
+      syncCustomers.mutate({});
+    }, 30 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <DashboardLayout>
@@ -123,8 +163,41 @@ export default function CustomersPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Customer List</CardTitle>
-            <CardDescription>All campaign customers from the Mother's Day demo</CardDescription>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle>Customer List</CardTitle>
+                <CardDescription>All campaign customers from the Mother's Day demo</CardDescription>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => syncCustomers.mutate({})}
+                  disabled={syncCustomers.isPending}
+                  title="Sync to Google Sheets"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-40"
+                >
+                  {syncCustomers.isPending
+                    ? <RefreshCw className="h-4 w-4 animate-spin" />
+                    : <RefreshCw className="h-4 w-4" />}
+                </button>
+                {sheetInfo?.sheetUrl && (
+                  <a
+                    href={sheetInfo.sheetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open Google Sheet"
+                    className="p-1.5 rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Auto-syncs to Google Sheets every 30 min — "Customer List" tab
+              {lastCustomerSynced && (
+                <span className="ml-1">· Last synced: {new Date(lastCustomerSynced).toLocaleString()}</span>
+              )}
+            </p>
           </CardHeader>
           <CardContent>
             {customersLoading ? (

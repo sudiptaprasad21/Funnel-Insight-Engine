@@ -210,6 +210,16 @@ export const SyncConversionRatesToGSheetResponse = zod.object({
 });
 
 /**
+ * @summary Sync customer list to a dedicated tab in the Google Sheet
+ */
+export const SyncCustomersToGSheetResponse = zod.object({
+  sheetUrl: zod.string(),
+  spreadsheetId: zod.string(),
+  syncedAt: zod.coerce.date(),
+  rowsWritten: zod.number(),
+});
+
+/**
  * @summary List customers with subscription and repeat status
  */
 export const listCustomersQueryLimitDefault = 50;
