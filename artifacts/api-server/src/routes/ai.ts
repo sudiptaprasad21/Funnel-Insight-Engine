@@ -22,7 +22,8 @@ router.post("/ai/analyze-drop-off", async (req, res): Promise<void> => {
   const detailViews     = sessionSet(["product_detail_view"]);
   const subIntents      = sessionSet(["intended_subscription"]);
   const wishlistSaves   = sessionSet(["add_to_wishlist"]);
-  const cartAdds        = sessionSet(["add_to_cart", "wishlist_to_cart"]);
+  // Match analytics.ts: any session reaching checkout/purchase must have carted
+  const cartAdds        = sessionSet(["add_to_cart", "wishlist_to_cart", "checkout_start", "purchase"]);
   const purchases       = sessionSet(["purchase"]);
   const checkouts       = sessionSet(["checkout_start", "purchase"]);
   const subscribed      = sessionSet(["subscribed"]);
@@ -144,7 +145,7 @@ Provide 4–6 drop-off reasons (covering the highest-loss stages), exactly 3 hyp
       dropOffReasons: [
         { reason: `Only ${bannerCTRPct}% of sessions clicked the campaign banner — low initial engagement`, likelihood: "high", stage: "Banner Click" },
         { reason: `${browseOnly} sessions browsed products without adding to cart — price or relevance friction`, likelihood: "high", stage: "Product View" },
-        { reason: `${checkoutDropPct}% of checkout starters did not complete purchase — payment or UX friction`, likelihood: "high", stage: "Checkout" },
+        { reason: `${checkoutDropPct}% of checkout starters did not complete purchase — payment or UX friction`, likelihood: "high", stage: "Checkout / Purchased" },
         { reason: "Users added items to wishlist but didn't convert to cart — intent without urgency", likelihood: "medium", stage: "Wishlist Save" },
         { reason: "Cart abandon rate suggests price sensitivity or unexpected costs at checkout", likelihood: "medium", stage: "Add to Cart" },
       ],
@@ -162,7 +163,7 @@ Provide 4–6 drop-off reasons (covering the highest-loss stages), exactly 3 hyp
         {
           hypothesis: `If we reduce checkout to a single page with autofill, checkout completion will increase because ${checkoutDropPct}% of starters currently abandon`,
           rationale: `${checkouts} sessions started checkout but only ${purchases} completed. Multi-step friction is the most likely cause at this drop-off rate.`,
-          stage: "Checkout",
+          stage: "Checkout / Purchased",
         },
       ],
       suggestedExperiment: {
