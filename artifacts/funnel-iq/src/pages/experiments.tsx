@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ClipboardList, RefreshCw, ExternalLink,
   FlaskConical, Play, CheckCircle2, Archive,
-  Clock, ChevronDown, ChevronUp, GitMerge,
+  Clock, ChevronDown, ChevronUp, GitMerge, ArrowUpDown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, type ReactNode } from "react";
@@ -39,6 +39,7 @@ export default function ExperimentsPage() {
   const queryClient = useQueryClient();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
   const [expandedMergeNotes, setExpandedMergeNotes] = useState<Set<number>>(new Set());
   const [lastExpSynced, setLastExpSynced] = useState<string | null>(null);
 
@@ -82,7 +83,7 @@ export default function ExperimentsPage() {
   const all = experiments ?? [];
   const base = statusFilter === "all" ? all : all.filter(e => (e.status ?? "proposed") === statusFilter);
 
-  // Sort: stale active experiments first, then merge-noted, then by createdAt desc
+  // Sort: stale active experiments first, then merge-noted, then by createdAt per sortOrder
   const filtered = [...base].sort((a, b) => {
     const staleScore = (e: typeof a) => {
       const lastActivity = e.updatedAt ?? e.createdAt;
@@ -93,7 +94,9 @@ export default function ExperimentsPage() {
     if (diff !== 0) return diff;
     // merge-noted experiments next
     if (!!b.mergeNote !== !!a.mergeNote) return !!b.mergeNote ? 1 : -1;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
   });
 
   const counts: Record<string, number> = { proposed: 0, running: 0, completed: 0, archived: 0 };
@@ -174,20 +177,30 @@ export default function ExperimentsPage() {
         </div>
 
         {/* Filter bar */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {(["all", "proposed", "running", "completed", "archived"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
-                statusFilter === f
-                  ? "bg-foreground text-background border-foreground"
-                  : "text-muted-foreground border-border hover:bg-muted"
-              }`}
-            >
-              {f === "all" ? `All (${all.length})` : `${STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
-            </button>
-          ))}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {(["all", "proposed", "running", "completed", "archived"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                  statusFilter === f
+                    ? "bg-foreground text-background border-foreground"
+                    : "text-muted-foreground border-border hover:bg-muted"
+                }`}
+              >
+                {f === "all" ? `All (${all.length})` : `${STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setSortOrder(prev => prev === "newest" ? "oldest" : "newest")}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors shrink-0"
+            title="Toggle sort order"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            {sortOrder === "newest" ? "Latest first" : "Oldest first"}
+          </button>
         </div>
 
         {/* Experiments list */}

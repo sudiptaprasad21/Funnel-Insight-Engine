@@ -39,6 +39,22 @@ export default function DashboardPage() {
 
   const analyzeDropOff = useAnalyzeDropOff();
 
+  const [aiAnalysis, setAiAnalysis] = useState<typeof analyzeDropOff.data | null>(() => {
+    try {
+      const stored = sessionStorage.getItem("fiq_ai_analysis");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (analyzeDropOff.data) {
+      setAiAnalysis(analyzeDropOff.data);
+      try { sessionStorage.setItem("fiq_ai_analysis", JSON.stringify(analyzeDropOff.data)); } catch {}
+    }
+  }, [analyzeDropOff.data]);
+
   const queryClient = useQueryClient();
   const { data: sheetInfo } = useGetSheetInfo({
     query: { queryKey: getGetSheetInfoQueryKey() }
@@ -266,8 +282,8 @@ export default function DashboardPage() {
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <Button
                       size="sm"
-                      variant={analyzeDropOff.data ? "outline" : "default"}
-                      className={analyzeDropOff.data ? "" : "bg-violet-600 hover:bg-violet-700 text-white"}
+                      variant={aiAnalysis ? "outline" : "default"}
+                      className={aiAnalysis ? "" : "bg-violet-600 hover:bg-violet-700 text-white"}
                       onClick={() => analyzeDropOff.mutate(undefined, {
                         onError: () => toast({ title: "Analysis Failed", description: "Could not run AI analysis. Please try again.", variant: "destructive" }),
                       })}
@@ -275,7 +291,7 @@ export default function DashboardPage() {
                     >
                       {analyzeDropOff.isPending ? (
                         <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Analysing…</>
-                      ) : analyzeDropOff.data ? (
+                      ) : aiAnalysis ? (
                         <><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Re-analyse</>
                       ) : (
                         <><Sparkles className="h-3.5 w-3.5 mr-1.5" />Analyse with AI</>
@@ -294,8 +310,8 @@ export default function DashboardPage() {
                 </CardContent>
               )}
 
-              {analyzeDropOff.data && !analyzeDropOff.isPending && (() => {
-                const ai = analyzeDropOff.data;
+              {aiAnalysis && !analyzeDropOff.isPending && (() => {
+                const ai = aiAnalysis;
                 const likelihoodColor: Record<string, string> = {
                   high: "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800",
                   medium: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
@@ -404,7 +420,7 @@ export default function DashboardPage() {
                 );
               })()}
 
-              {!analyzeDropOff.data && !analyzeDropOff.isPending && (
+              {!aiAnalysis && !analyzeDropOff.isPending && (
                 <CardContent>
                   <div className="flex flex-col items-center justify-center py-8 text-center">
                     <Brain className="h-10 w-10 text-violet-200 dark:text-violet-800 mb-3" />
