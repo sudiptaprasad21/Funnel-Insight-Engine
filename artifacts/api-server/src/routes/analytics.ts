@@ -284,8 +284,7 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
     { stage: "Product Detail View",  users: productDetailViews,  dropOff: 0, dropOffRate: 0 },
     { stage: "Wishlist Save",        users: addToWishlist,       dropOff: 0, dropOffRate: 0 },
     { stage: "Add to Cart",          users: addToCart,           dropOff: 0, dropOffRate: 0 },
-    { stage: "Checkout",             users: checkouts,           dropOff: 0, dropOffRate: 0 },
-    { stage: "Purchased",            users: purchases,           dropOff: 0, dropOffRate: 0 },
+    { stage: "Checkout / Purchased", users: checkouts,           dropOff: 0, dropOffRate: 0 },
     // ── Subscription path (parallel to purchase path) ─────────────────────────
     { stage: "Subscription Intent",  users: subscriptionIntents, dropOff: 0, dropOffRate: 0 },
     { stage: "Subscribed",           users: subscribed,          dropOff: 0, dropOffRate: 0 },
@@ -303,12 +302,12 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
         : 0;
   }
 
-  // Purchased is a terminal stage on the purchase path — the subscription path
-  // is parallel, not sequential, so no drop-off is shown here.
-  const purchasedIdx = stages.findIndex((s) => s.stage === "Purchased");
-  if (purchasedIdx >= 0) {
-    stages[purchasedIdx].dropOff = 0;
-    stages[purchasedIdx].dropOffRate = 0;
+  // Checkout / Purchased is a terminal stage on the purchase path — the subscription
+  // path is parallel, not sequential, so no drop-off is shown here.
+  const checkoutPurchasedIdx = stages.findIndex((s) => s.stage === "Checkout / Purchased");
+  if (checkoutPurchasedIdx >= 0) {
+    stages[checkoutPurchasedIdx].dropOff = 0;
+    stages[checkoutPurchasedIdx].dropOffRate = 0;
   }
 
   // Subscription Intent: true drop-off = sessions that had intent but never subscribed.
@@ -328,8 +327,8 @@ router.get("/analytics/drop-off", async (req, res): Promise<void> => {
     stages[subscribedIdx].dropOffRate = 0;
   }
 
-  // Exclude terminal stages (Purchased, Subscribed) from top drop-off ranking.
-  const terminalStages = new Set(["Purchased", "Subscribed"]);
+  // Exclude terminal stages from top drop-off ranking.
+  const terminalStages = new Set(["Checkout / Purchased", "Subscribed"]);
   const topDropOffStage =
     stages
       .filter((s) => !terminalStages.has(s.stage))
@@ -397,8 +396,7 @@ router.post("/analytics/sync-gsheet", async (req, res): Promise<void> => {
     { name: "Product Detail View", key: "product_detail_view" },
     { name: "Add to Wishlist",     key: "add_to_wishlist" },
     { name: "Add to Cart",         key: "add_to_cart" },
-    { name: "Checkout Start",      key: "checkout_start" },
-    { name: "Purchased",           key: "purchase" },
+    { name: "Checkout / Purchased", key: "checkout_start" },
     { name: "Subscription Intent", key: "intended_subscription" },
     { name: "Subscribed",          key: "subscribed" },
   ];

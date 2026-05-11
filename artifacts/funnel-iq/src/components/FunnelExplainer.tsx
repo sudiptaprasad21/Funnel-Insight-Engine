@@ -8,8 +8,7 @@ const PURCHASE_STAGES = [
   "Product View",
   "Wishlist",
   "Add to Cart",
-  "Checkout",
-  "Purchased",
+  "Checkout / Purchased",
 ];
 
 const SUBSCRIPTION_STAGES = [

@@ -164,7 +164,7 @@ export default function DashboardPage() {
                   const top = dropOff.stages[0]?.users ?? 1;
                   const barColors = [
                     "bg-blue-500", "bg-blue-400", "bg-indigo-500", "bg-indigo-400",
-                    "bg-violet-500", "bg-violet-400", "bg-purple-500", "bg-green-600",
+                    "bg-violet-500", "bg-violet-400", "bg-purple-500",
                     "bg-green-500", "bg-emerald-400",
                   ];
                   return (
@@ -402,8 +402,7 @@ export default function DashboardPage() {
                       { label: "Wishlist → Cart", value: summary.wishlistToCart, icon: <ShoppingCart className="h-4 w-4 text-indigo-400" /> },
                       { label: "Add to Cart", value: summary.addToCart, icon: <ShoppingCart className="h-4 w-4 text-purple-400" /> },
                       { label: "Cart Abandons", value: summary.cartAbandons, icon: <TrendingDown className="h-4 w-4 text-orange-400" /> },
-                      { label: "Checkout Starts", value: summary.checkoutStarts, icon: <Target className="h-4 w-4 text-yellow-500" /> },
-                      { label: "Purchases", value: summary.purchases, icon: <Target className="h-4 w-4 text-green-500" /> },
+                      { label: "Checkout / Purchased", value: summary.purchases, icon: <Target className="h-4 w-4 text-purple-500" /> },
                       { label: "Wishlist Removes", value: summary.removeFromWishlist, icon: <HeartOff className="h-4 w-4 text-slate-400" /> },
                     ].map(({ label, value, icon }) => (
                       <div key={label} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
