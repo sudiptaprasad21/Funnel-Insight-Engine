@@ -179,7 +179,7 @@ export default function DashboardPage() {
                   const barColors = [
                     "bg-blue-500", "bg-blue-400", "bg-indigo-500", "bg-indigo-400",
                     "bg-violet-500", "bg-violet-400", "bg-purple-500",
-                    "bg-green-500", "bg-emerald-400",
+                    "bg-green-300", "bg-emerald-400",
                   ];
                   return (
                     <div className="space-y-0.5">
