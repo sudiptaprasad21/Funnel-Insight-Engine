@@ -6,7 +6,6 @@ import {
   getGetDropOffAnalysisQueryKey,
   useGetCustomerTrends,
   getGetCustomerTrendsQueryKey,
-  useDiagnoseFunnel,
   useAnalyzeDropOff,
   useGetSheetInfo,
   getGetSheetInfoQueryKey,
@@ -17,8 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle } from "lucide-react";
+
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FunnelExplainer } from "@/components/FunnelExplainer";
 
@@ -37,27 +36,6 @@ export default function DashboardPage() {
   });
 
   const analyzeDropOff = useAnalyzeDropOff();
-
-  const diagnose = useDiagnoseFunnel();
-  const [diagnosisStage, setDiagnosisStage] = useState<string>("checkout");
-
-  const handleDiagnose = () => {
-    diagnose.mutate({ data: { funnelStage: diagnosisStage } }, {
-      onSuccess: () => {
-        toast({
-          title: "Diagnosis Complete",
-          description: "AI has generated insights for the selected funnel stage.",
-        });
-      },
-      onError: () => {
-        toast({
-          title: "Diagnosis Failed",
-          description: "Could not generate AI insights.",
-          variant: "destructive"
-        });
-      }
-    });
-  };
 
   const queryClient = useQueryClient();
   const { data: sheetInfo } = useGetSheetInfo({
@@ -449,82 +427,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-primary/20 shadow-sm bg-primary/5">
-              <CardHeader>
-                <div className="flex items-center gap-2 mb-2">
-                  <BrainCircuit className="h-5 w-5 text-primary" />
-                  <CardTitle>AI Diagnostician</CardTitle>
-                </div>
-                <CardDescription>Analyze drop-off points to generate hypotheses and experiment ideas.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select stage to diagnose:</label>
-                  <select
-                    className="w-full p-2 rounded-md border bg-background text-sm"
-                    value={diagnosisStage}
-                    onChange={(e) => setDiagnosisStage(e.target.value)}
-                  >
-                    <option value="checkout">Checkout Flow</option>
-                    <option value="product_view">Product Views</option>
-                    <option value="add_to_cart">Cart Adds</option>
-                  </select>
-                </div>
-
-                <Button
-                  className="w-full"
-                  onClick={handleDiagnose}
-                  disabled={diagnose.isPending}
-                  data-testid="button-diagnose"
-                >
-                  {diagnose.isPending ? "Analyzing..." : "Diagnose Funnel"}
-                </Button>
-
-                {diagnose.data && (
-                  <div className="pt-6 mt-6 border-t border-primary/10 space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                    <div>
-                      <h4 className="font-semibold text-sm mb-2 text-primary">Summary</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {diagnose.data.summary}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm text-primary">Top Insights</h4>
-                      {diagnose.data.topInsights.map((insight, i) => (
-                        <div key={i} className="bg-background p-3 rounded-lg border text-sm space-y-1 shadow-sm">
-                          <div className="flex justify-between items-start gap-2">
-                            <span className="font-medium leading-tight">{insight.title}</span>
-                            <Badge variant="outline" className={
-                              insight.severity === 'critical' ? 'bg-red-50 text-red-700 border-red-200' :
-                              insight.severity === 'high' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                              insight.severity === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                              'bg-blue-50 text-blue-700 border-blue-200'
-                            }>
-                              {insight.severity}
-                            </Badge>
-                          </div>
-                          <p className="text-muted-foreground text-xs">{insight.description}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {diagnose.data.experiments.length > 0 && (
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-sm text-primary">Suggested Experiments</h4>
-                        {diagnose.data.experiments.map((exp, i) => (
-                          <div key={i} className="bg-background p-3 rounded-lg border text-sm space-y-1 shadow-sm">
-                            <p className="font-medium">{exp.title}</p>
-                            <p className="text-muted-foreground text-xs">{exp.hypothesis}</p>
-                            <Badge variant="outline" className="text-xs">{exp.effort} effort · {exp.funnelStage}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
