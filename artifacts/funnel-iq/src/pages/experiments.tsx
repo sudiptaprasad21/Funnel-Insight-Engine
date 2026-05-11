@@ -15,7 +15,7 @@ import {
   Clock, ChevronDown, ChevronUp, GitMerge,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 type StatusFilter = "all" | "proposed" | "running" | "completed" | "archived";
@@ -68,8 +68,32 @@ export default function ExperimentsPage() {
     },
   });
 
+  // Auto-expand merge notes on first data load so they're visible immediately
+  useEffect(() => {
+    if (experiments && experiments.length > 0) {
+      const withNotes = experiments.filter(e => !!e.mergeNote).map(e => e.id);
+      if (withNotes.length > 0) {
+        setExpandedMergeNotes(new Set(withNotes));
+      }
+    }
+  }, [experiments !== undefined]);
+
   const all = experiments ?? [];
-  const filtered = statusFilter === "all" ? all : all.filter(e => (e.status ?? "proposed") === statusFilter);
+  const base = statusFilter === "all" ? all : all.filter(e => (e.status ?? "proposed") === statusFilter);
+
+  // Sort: stale active experiments first, then merge-noted, then by createdAt desc
+  const filtered = [...base].sort((a, b) => {
+    const staleScore = (e: typeof a) => {
+      const lastActivity = e.updatedAt ?? e.createdAt;
+      const days = Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
+      return (days > 14 && (e.status === "proposed" || e.status === "running")) ? days : 0;
+    };
+    const diff = staleScore(b) - staleScore(a);
+    if (diff !== 0) return diff;
+    // merge-noted experiments next
+    if (!!b.mergeNote !== !!a.mergeNote) return !!b.mergeNote ? 1 : -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   const counts: Record<string, number> = { proposed: 0, running: 0, completed: 0, archived: 0 };
   for (const e of all) counts[e.status ?? "proposed"] = (counts[e.status ?? "proposed"] ?? 0) + 1;
