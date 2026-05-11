@@ -570,7 +570,7 @@ export default function DashboardPage() {
 
                       {/* How to read — methodology note */}
                       <div className="rounded-xl border border-blue-200/60 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-3">
-                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">How to read these cards</p>
+                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">How to Read "Conversion Rate Cards"?</p>
                         <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                           <p>
                             <span className="font-semibold">These cards count events, not sessions.</span>{" "}
@@ -582,27 +582,14 @@ export default function DashboardPage() {
                             — each visitor counted once per stage regardless of how many times they triggered it. That's why
                             the same concept (e.g. "Add to Cart") shows different numbers in each section.
                           </p>
-                          <p className="font-semibold text-slate-700 dark:text-slate-200">Example with live data:</p>
+                          <p className="font-semibold text-slate-700 dark:text-slate-200">Example:</p>
                           <ul className="space-y-1 pl-3 border-l-2 border-blue-300 dark:border-blue-700">
-                            <li>
-                              <span className="font-medium">Product → Cart Rate = {Math.round((summary.addToCart / Math.max(summary.productViews, 1)) * 100)}%</span>
-                              {" "}— {summary.addToCart} add-to-cart events recorded across {summary.productViews} product-view events
-                              (from {summary.totalVisitors} unique visitors). High product-view count is normal: one visitor scrolling
-                              past multiple products fires multiple events.
-                            </li>
                             <li>
                               <span className="font-medium">Cart → Purchase = {Math.min(100, Math.round((summary.purchases / Math.max(summary.addToCart, 1)) * 100))}%{summary.purchases > summary.addToCart ? " (capped)" : ""}</span>
                               {" "}— {summary.purchases} purchases from {summary.addToCart} add-to-cart events.
                               {summary.purchases > summary.addToCart
                                 ? ` Purchases exceed cart events because ${summary.purchases - summary.addToCart} user(s) went directly to checkout without triggering an add-to-cart event — capped at 100%.`
                                 : " All purchases were preceded by a recorded cart action."}
-                            </li>
-                            <li>
-                              <span className="font-medium">Subscription Conversion = {Math.min(100, Math.round((summary.subscriptions / Math.max(summary.intendedSubscriptions, 1)) * 100))}%</span>
-                              {" "}— {summary.subscriptions} subscriptions from {summary.intendedSubscriptions} intent events.
-                              {summary.intendedSubscriptions > summary.subscriptions
-                                ? ` ${summary.intendedSubscriptions - summary.subscriptions} intent event(s) did not convert — a user may open the subscription panel more than once before deciding.`
-                                : ""}
                             </li>
                           </ul>
                         </div>
