@@ -43,7 +43,15 @@ export default function CustomersPage() {
 
   const [lastCustomerSynced, setLastCustomerSynced] = useState<string | null>(null);
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
-  const [filterStatus, setFilterStatus] = useState<"all" | "new" | "repeat" | "subscribed">("all");
+  const [activeFilters, setActiveFilters] = useState<Set<"new" | "repeat" | "subscribed">>(new Set());
+
+  function toggleFilter(f: "new" | "repeat" | "subscribed") {
+    setActiveFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(f)) next.delete(f); else next.add(f);
+      return next;
+    });
+  }
   const [sortField, setSortField] = useState<"name" | "orders" | "spend" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
@@ -126,9 +134,14 @@ export default function CustomersPage() {
   const filteredCustomers = useMemo(() => {
     if (!customers) return [];
     let list = [...customers];
-    if (filterStatus === "new") list = list.filter((c) => !c.isRepeat && !c.isSubscribed);
-    else if (filterStatus === "repeat") list = list.filter((c) => c.isRepeat);
-    else if (filterStatus === "subscribed") list = list.filter((c) => c.isSubscribed);
+    if (activeFilters.size > 0) {
+      list = list.filter((c) => {
+        if (activeFilters.has("new") && !c.isRepeat && !c.isSubscribed) return true;
+        if (activeFilters.has("repeat") && c.isRepeat) return true;
+        if (activeFilters.has("subscribed") && c.isSubscribed) return true;
+        return false;
+      });
+    }
     if (sortField) {
       list.sort((a, b) => {
         let aVal: number | string = 0;
@@ -142,7 +155,7 @@ export default function CustomersPage() {
       });
     }
     return list;
-  }, [customers, filterStatus, sortField, sortDir]);
+  }, [customers, activeFilters, sortField, sortDir]);
 
   const syncCustomers = useSyncCustomersToGSheet({
     mutation: {
@@ -355,17 +368,27 @@ export default function CustomersPage() {
           <CardContent>
             {/* Filter pills */}
             <div className="flex items-center gap-2 mb-4 flex-wrap">
-              {(["all", "new", "repeat", "subscribed"] as const).map((s) => (
+              <button
+                onClick={() => setActiveFilters(new Set())}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  activeFilters.size === 0
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-muted-foreground border-border hover:bg-muted"
+                }`}
+              >
+                All
+              </button>
+              {(["new", "repeat", "subscribed"] as const).map((s) => (
                 <button
                   key={s}
-                  onClick={() => setFilterStatus(s)}
+                  onClick={() => toggleFilter(s)}
                   className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    filterStatus === s
+                    activeFilters.has(s)
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-card text-muted-foreground border-border hover:bg-muted"
                   }`}
                 >
-                  {s === "all" ? "All" : s === "new" ? "New" : s === "repeat" ? "Repeat" : "Subscribed"}
+                  {s === "new" ? "New" : s === "repeat" ? "Repeat" : "Subscribed"}
                 </button>
               ))}
               <span className="ml-auto text-xs text-muted-foreground">
