@@ -253,15 +253,15 @@ export default function DashboardPage() {
             <Card className="border-violet-200/60 bg-violet-50/20 dark:bg-violet-950/10">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-violet-500" />
-                    <div>
-                      <CardTitle className="text-base">AI Drop-off Analysis</CardTitle>
-                      <CardDescription className="text-xs mt-0.5">
-                        AI scans real funnel data to surface likely reasons, testable hypotheses, and an experiment
-                        <br /><em>Powered by GPT-5.2</em>
-                      </CardDescription>
-                    </div>
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Brain className="h-5 w-5 text-violet-500 shrink-0" />
+                      AI Drop-off Analysis
+                    </CardTitle>
+                    <CardDescription className="text-xs mt-0.5">
+                      AI scans real funnel data to surface likely reasons, testable hypotheses, and an experiment
+                      <br /><em>Powered by GPT-5.2</em>
+                    </CardDescription>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <Button
