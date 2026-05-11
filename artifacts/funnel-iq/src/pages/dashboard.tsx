@@ -264,19 +264,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
-                    {/* Feature 4: Confidence indicator based on session volume */}
-                    {summary && (() => {
-                      const v = summary.totalVisitors ?? 0;
-                      const conf = v >= 100 ? { label: "High confidence", color: "text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800" }
-                        : v >= 20 ? { label: "Medium confidence", color: "text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800" }
-                        : { label: "Low confidence", color: "text-slate-500 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700" };
-                      return (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${conf.color}`} title={`Based on ${v} sessions — AI diagnosis is ${v >= 100 ? "highly" : v >= 20 ? "moderately" : "less"} reliable at this volume`}>
-                          <BarChart2 className="h-2.5 w-2.5" />
-                          {conf.label}
-                        </span>
-                      );
-                    })()}
                     <Button
                       size="sm"
                       variant={analyzeDropOff.data ? "outline" : "default"}
@@ -321,6 +308,23 @@ export default function DashboardPage() {
                 };
                 return (
                   <CardContent className="space-y-6 pt-0">
+                    {/* Confidence indicator — shown only after analysis */}
+                    {summary && (() => {
+                      const v = summary.totalVisitors ?? 0;
+                      const conf = v >= 20
+                        ? { label: "High confidence", color: "text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800", title: `${v} sessions — sufficient data for reliable AI insights` }
+                        : v >= 10
+                        ? { label: "Medium confidence", color: "text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800", title: `${v} sessions — limited data, insights may be less reliable` }
+                        : { label: "Low confidence", color: "text-slate-500 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700", title: `${v} sessions — too few sessions for reliable conclusions` };
+                      return (
+                        <div className="flex justify-end -mt-2 mb-0">
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${conf.color}`} title={conf.title}>
+                            <BarChart2 className="h-2.5 w-2.5" />
+                            {conf.label}
+                          </span>
+                        </div>
+                      );
+                    })()}
                     {/* Top drop-off callout */}
                     <div className="flex items-center gap-2 px-3 py-2 bg-destructive/10 rounded-lg border border-destructive/20">
                       <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
