@@ -4,19 +4,19 @@ import * as schema from "./schema";
 
 const { Pool } = pg;
 
-const connectionString =
+const rawConnectionString =
   process.env.SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL;
 
-if (!connectionString) {
+if (!rawConnectionString) {
   throw new Error(
     "DATABASE_URL or SUPABASE_DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
 /**
- * Parse a postgres connection URL using a regex so that special characters
- * in the password (e.g. #, @) are preserved correctly.
- * Standard URL parsers treat # as a fragment delimiter and silently truncate.
+ * Parse a postgres connection URL using a regex so special characters in the
+ * password (e.g. #) are preserved. Standard URL parsers treat # as a fragment
+ * delimiter and silently truncate the password.
  */
 function parsePostgresUrl(url: string) {
   const match = url.match(
@@ -28,11 +28,11 @@ function parsePostgresUrl(url: string) {
 }
 
 const isSupabase = !!process.env.SUPABASE_DATABASE_URL;
-const parsed = isSupabase ? parsePostgresUrl(connectionString) : null;
+const parsed = isSupabase ? parsePostgresUrl(rawConnectionString) : null;
 
 export const pool = parsed
   ? new Pool({ ...parsed, ssl: { rejectUnauthorized: false } })
-  : new Pool({ connectionString });
+  : new Pool({ connectionString: rawConnectionString });
 
 export const db = drizzle(pool, { schema });
 

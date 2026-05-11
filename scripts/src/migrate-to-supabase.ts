@@ -3,14 +3,14 @@
  *
  * Creates the full schema on Supabase and migrates all data from the Replit DB.
  * Safe to re-run: uses CREATE TABLE IF NOT EXISTS and ON CONFLICT DO NOTHING/UPDATE.
- * Handles special characters (e.g. #) in passwords correctly.
+ * Uses pg.Client (not Pool) with individual params to handle special chars in passwords.
  *
  * Usage: pnpm --filter @workspace/scripts run migrate-to-supabase
  */
 
 import pg from "pg";
 
-const { Pool } = pg;
+const { Client, Pool } = pg;
 
 const SOURCE_URL = process.env.DATABASE_URL;
 const TARGET_URL = process.env.SUPABASE_DATABASE_URL;
@@ -25,27 +25,21 @@ if (!TARGET_URL) {
 }
 
 /**
- * Parse a postgres connection URL using a regex so that special characters
- * in the password (e.g. #, @) are preserved correctly.
- * Standard URL parsers treat # as a fragment delimiter and silently truncate.
+ * Parse a postgres URL with a regex so that special characters in the password
+ * (e.g. #) are correctly extracted — standard URL parsers treat # as a fragment
+ * delimiter and silently truncate the password.
  */
 function parsePostgresUrl(url: string) {
   const match = url.match(
     /^(?:postgresql|postgres):\/\/([^:]+):(.+)@([^@:/]+)(?::(\d+))?\/([^?]+)/,
   );
-  if (!match) {
-    throw new Error(`Cannot parse connection string. Expected format: postgresql://user:password@host:port/database`);
-  }
+  if (!match) throw new Error(`Cannot parse connection string: ${url.slice(0, 30)}…`);
   const [, user, password, host, port, database] = match;
   return { user, password, host, port: port ? parseInt(port, 10) : 5432, database };
 }
 
-const source = new Pool({ connectionString: SOURCE_URL });
-
-const targetParsed = parsePostgresUrl(TARGET_URL);
-console.log(`Connecting to Supabase host: ${targetParsed.host}`);
-
-const target = new Pool({ ...targetParsed, ssl: { rejectUnauthorized: false } });
+const targetParams = parsePostgresUrl(TARGET_URL);
+console.log(`Connecting to Supabase host: ${targetParams.host}`);
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS products (
@@ -108,8 +102,14 @@ CREATE TABLE IF NOT EXISTS app_settings (
 async function run() {
   console.log("=== Supabase Migration ===\n");
 
-  const tgt = await target.connect();
-  const src = await source.connect();
+  // Source: use Pool (Replit DB, no special chars in URL)
+  const srcPool = new Pool({ connectionString: SOURCE_URL });
+  const src = await srcPool.connect();
+
+  // Target: use Client with individual params (handles # in password)
+  const tgt = new Client({ ...targetParams, ssl: { rejectUnauthorized: false } });
+  await tgt.connect();
+  console.log("  ✓ Connected to Supabase\n");
 
   try {
     // ── Step 1: Create schema ──────────────────────────────────────────────
@@ -230,9 +230,8 @@ async function run() {
       : "\n✗ Some counts differ — check the output above.");
   } finally {
     src.release();
-    tgt.release();
-    await source.end();
-    await target.end();
+    await srcPool.end();
+    await tgt.end();
   }
 }
 
