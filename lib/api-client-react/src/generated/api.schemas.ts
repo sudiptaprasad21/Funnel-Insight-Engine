@@ -80,12 +80,6 @@ export interface FunnelSummary {
   subscriptions?: number;
 }
 
-export interface DailyRevenue {
-  date: string;
-  revenue: number;
-  orders: number;
-}
-
 export interface CampaignMetrics {
   campaignName: string;
   bannerClicks: number;
@@ -95,8 +89,6 @@ export interface CampaignMetrics {
   nappySubscriptions: number;
   intendedSubscriptions: number;
   subscriptions: number;
-  totalRevenue: number;
-  revenueByDay?: DailyRevenue[];
 }
 
 export interface TrafficPoint {
@@ -125,8 +117,6 @@ export interface CustomerTrends {
   repeatCustomers: number;
   repeatRate: number;
   activeSubscriptions: number;
-  avgSubscriptionDays: number;
-  churnedThisMonth: number;
   monthlyTrend: MonthlyCustomerPoint[];
 }
 

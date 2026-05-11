@@ -13,7 +13,5 @@ export interface CustomerTrends {
   repeatCustomers: number;
   repeatRate: number;
   activeSubscriptions: number;
-  avgSubscriptionDays: number;
-  churnedThisMonth: number;
   monthlyTrend: MonthlyCustomerPoint[];
 }

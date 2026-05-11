@@ -484,7 +484,7 @@ components:
     CampaignMetrics:
       type: object
       required: [campaignName, bannerClicks, discountItemViews, discountItemPurchases,
-                 browseOnlyVisitors, nappySubscriptions, intendedSubscriptions, subscriptions, totalRevenue]
+                 browseOnlyVisitors, nappySubscriptions, intendedSubscriptions, subscriptions]
       properties:
         campaignName:           { type: string }
         bannerClicks:           { type: integer }
@@ -494,19 +494,6 @@ components:
         nappySubscriptions:     { type: integer }
         intendedSubscriptions:  { type: integer }
         subscriptions:          { type: integer }
-        totalRevenue:           { type: number }
-        revenueByDay:
-          type: array
-          items:
-            $ref: "#/components/schemas/DailyRevenue"
-
-    DailyRevenue:
-      type: object
-      required: [date, revenue, orders]
-      properties:
-        date:    { type: string }
-        revenue: { type: number }
-        orders:  { type: integer }
 
     TrafficData:
       type: object
@@ -534,16 +521,13 @@ components:
     CustomerTrends:
       type: object
       required: [totalCustomers, newThisMonth, repeatCustomers, repeatRate,
-                 activeSubscriptions, avgSubscriptionDays, churnedThisMonth,
-                 monthlyTrend]
+                 activeSubscriptions, monthlyTrend]
       properties:
         totalCustomers:       { type: integer }
         newThisMonth:         { type: integer }
         repeatCustomers:      { type: integer }
         repeatRate:           { type: number }
         activeSubscriptions:  { type: integer }
-        avgSubscriptionDays:  { type: number }
-        churnedThisMonth:     { type: integer }
         monthlyTrend:
           type: array
           items:

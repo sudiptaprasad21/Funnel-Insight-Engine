@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, RefreshCw, Repeat2, Star, ExternalLink } from "lucide-react";
+import { Users, RefreshCw, Repeat2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import {
@@ -78,7 +78,7 @@ export default function CustomersPage() {
           <p className="text-muted-foreground">Campaign audience overview and subscription health</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard
             title="Total Customers"
             value={trendsLoading ? undefined : trends?.totalCustomers}
@@ -96,12 +96,6 @@ export default function CustomersPage() {
             title="Active Subscriptions"
             value={trendsLoading ? undefined : trends?.activeSubscriptions}
             icon={<RefreshCw className="h-4 w-4 text-green-500" />}
-            loading={trendsLoading}
-          />
-          <StatCard
-            title="Avg. Sub Duration"
-            value={trendsLoading ? undefined : `${trends?.avgSubscriptionDays ?? 0}d`}
-            icon={<Star className="h-4 w-4 text-orange-500" />}
             loading={trendsLoading}
           />
         </div>
@@ -154,7 +148,6 @@ export default function CustomersPage() {
                   <HealthRow label="Active Subs" value={trends?.activeSubscriptions ?? 0} total={trends?.totalCustomers ?? 1} color="bg-green-500" />
                   <HealthRow label="Repeat Buyers" value={trends?.repeatCustomers ?? 0} total={trends?.totalCustomers ?? 1} color="bg-blue-500" />
                   <HealthRow label="New This Month" value={trends?.newThisMonth ?? 0} total={trends?.totalCustomers ?? 1} color="bg-purple-500" />
-                  <HealthRow label="Churned" value={trends?.churnedThisMonth ?? 0} total={trends?.totalCustomers ?? 1} color="bg-destructive" />
                 </>
               )}
             </CardContent>

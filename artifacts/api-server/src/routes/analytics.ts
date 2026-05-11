@@ -107,25 +107,6 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
     (e) => e.eventType === "subscribed",
   ).length;
 
-  // Simulate revenue with seeded data pattern — each purchase worth ~₹45
-  const totalRevenue = parseFloat((discountItemPurchases * 45.5).toFixed(2));
-
-  // Generate last 7 days revenue trend
-  const today = new Date();
-  const revenueByDay = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    const dateStr = d.toISOString().split("T")[0];
-    // Count events for that day
-    const dayEvents = events.filter((e) => {
-      const evtDate = new Date(e.createdAt).toISOString().split("T")[0];
-      return evtDate === dateStr && e.eventType === "purchase";
-    });
-    const orders = dayEvents.length;
-    const revenue = parseFloat((orders * 45.5).toFixed(2));
-    return { date: dateStr, revenue, orders };
-  });
-
   res.json({
     campaignName: "Happy Mom Mother's Day 2026",
     bannerClicks,
@@ -135,8 +116,6 @@ router.get("/analytics/campaign-metrics", async (req, res): Promise<void> => {
     nappySubscriptions,
     intendedSubscriptions,
     subscriptions,
-    totalRevenue,
-    revenueByDay,
   });
 });
 
@@ -201,21 +180,6 @@ router.get("/analytics/customer-trends", async (req, res): Promise<void> => {
   ).length;
   const repeatCustomers = customers.filter((c) => c.isRepeat).length;
   const activeSubscriptions = customers.filter((c) => c.isSubscribed).length;
-  const subscribedWithDays = customers.filter(
-    (c) => c.isSubscribed && c.subscriptionDays,
-  );
-  const avgSubscriptionDays =
-    subscribedWithDays.length > 0
-      ? parseFloat(
-          (
-            subscribedWithDays.reduce(
-              (sum, c) => sum + (c.subscriptionDays ?? 0),
-              0,
-            ) / subscribedWithDays.length
-          ).toFixed(1),
-        )
-      : 0;
-
   const repeatRate =
     customers.length > 0
       ? parseFloat(((repeatCustomers / customers.length) * 100).toFixed(1))
@@ -248,8 +212,6 @@ router.get("/analytics/customer-trends", async (req, res): Promise<void> => {
     repeatCustomers,
     repeatRate,
     activeSubscriptions,
-    avgSubscriptionDays,
-    churnedThisMonth: activeSubscriptions > 0 ? Math.floor(activeSubscriptions * 0.05) : 0,
     monthlyTrend,
   });
 });

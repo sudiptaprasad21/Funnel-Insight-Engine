@@ -5,7 +5,6 @@
  * Nexpoint Funnel IQ — AI-assisted funnel drop-off diagnosis tool and Happy Mom campaign tracking API
  * OpenAPI spec version: 0.1.0
  */
-import type { DailyRevenue } from "./dailyRevenue";
 
 export interface CampaignMetrics {
   campaignName: string;
@@ -16,6 +15,4 @@ export interface CampaignMetrics {
   nappySubscriptions: number;
   intendedSubscriptions: number;
   subscriptions: number;
-  totalRevenue: number;
-  revenueByDay?: DailyRevenue[];
 }

@@ -104,16 +104,6 @@ export const GetCampaignMetricsResponse = zod.object({
   nappySubscriptions: zod.number(),
   intendedSubscriptions: zod.number(),
   subscriptions: zod.number(),
-  totalRevenue: zod.number(),
-  revenueByDay: zod
-    .array(
-      zod.object({
-        date: zod.string(),
-        revenue: zod.number(),
-        orders: zod.number(),
-      }),
-    )
-    .optional(),
 });
 
 /**
@@ -146,8 +136,6 @@ export const GetCustomerTrendsResponse = zod.object({
   repeatCustomers: zod.number(),
   repeatRate: zod.number(),
   activeSubscriptions: zod.number(),
-  avgSubscriptionDays: zod.number(),
-  churnedThisMonth: zod.number(),
   monthlyTrend: zod.array(
     zod.object({
       month: zod.string(),

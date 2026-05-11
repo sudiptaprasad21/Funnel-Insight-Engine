@@ -10,7 +10,6 @@ export * from "./campaignMetrics";
 export * from "./customer";
 export * from "./customerInput";
 export * from "./customerTrends";
-export * from "./dailyRevenue";
 export * from "./diagnoseInput";
 export * from "./diagnosisResult";
 export * from "./dropOffAIAnalysis";
