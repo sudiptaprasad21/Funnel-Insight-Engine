@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-type StatusFilter = "all" | "proposed" | "running" | "completed" | "archived";
+type StatusFilter = "all" | "proposed" | "running" | "completed" | "archived" | "stale";
 
 const STATUS_CONFIG: Record<string, { label: string; icon: ReactNode; color: string; activeColor: string }> = {
   proposed:  { label: "Proposed",  icon: <FlaskConical className="h-3 w-3" />, color: "text-slate-600 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",         activeColor: "bg-slate-100 border-slate-300 text-slate-700 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300" },
@@ -81,7 +81,17 @@ export default function ExperimentsPage() {
   }, [experiments !== undefined]);
 
   const all = experiments ?? [];
-  const base = statusFilter === "all" ? all : all.filter(e => (e.status ?? "proposed") === statusFilter);
+
+  const isStale = (e: (typeof all)[0]) => {
+    const lastActivity = e.updatedAt ?? e.createdAt;
+    const days = Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
+    return days > 14 && (e.status === "proposed" || e.status === "running");
+  };
+
+  const base =
+    statusFilter === "all" ? all
+    : statusFilter === "stale" ? all.filter(isStale)
+    : all.filter(e => (e.status ?? "proposed") === statusFilter);
 
   // Sort: stale active experiments first, then merge-noted, then by createdAt per sortOrder
   const filtered = [...base].sort((a, b) => {
@@ -101,6 +111,7 @@ export default function ExperimentsPage() {
 
   const counts: Record<string, number> = { proposed: 0, running: 0, completed: 0, archived: 0 };
   for (const e of all) counts[e.status ?? "proposed"] = (counts[e.status ?? "proposed"] ?? 0) + 1;
+  const staleCount = all.filter(isStale).length;
 
   const toggleMergeNote = (id: number) => {
     setExpandedMergeNotes(prev => {
@@ -153,7 +164,7 @@ export default function ExperimentsPage() {
         )}
 
         {/* Status summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {(["proposed", "running", "completed", "archived"] as const).map((s) => {
             const cfg = STATUS_CONFIG[s];
             return (
@@ -174,22 +185,40 @@ export default function ExperimentsPage() {
               </button>
             );
           })}
+          <button
+            onClick={() => setStatusFilter(prev => prev === "stale" ? "all" : "stale")}
+            className={`text-left px-4 py-3 rounded-xl border transition-all ${
+              statusFilter === "stale"
+                ? "bg-orange-50 border-orange-300 text-orange-700 dark:bg-orange-950/40 dark:border-orange-700 dark:text-orange-400 ring-2 ring-offset-1 ring-current/30"
+                : "bg-card border-border hover:bg-muted/50"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Clock className={`h-3 w-3 ${statusFilter === "stale" ? "" : "text-muted-foreground"}`} />
+              <span className="text-xs font-medium text-muted-foreground">Stale</span>
+            </div>
+            <p className="text-2xl font-bold">{isLoading ? "—" : staleCount}</p>
+          </button>
         </div>
 
         {/* Filter bar */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            {(["all", "proposed", "running", "completed", "archived"] as const).map((f) => (
+            {(["all", "proposed", "running", "completed", "archived", "stale"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
                 className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                   statusFilter === f
-                    ? "bg-foreground text-background border-foreground"
+                    ? f === "stale"
+                      ? "bg-orange-500 text-white border-orange-500"
+                      : "bg-foreground text-background border-foreground"
                     : "text-muted-foreground border-border hover:bg-muted"
                 }`}
               >
-                {f === "all" ? `All (${all.length})` : `${STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
+                {f === "all" ? `All (${all.length})`
+                  : f === "stale" ? `Stale (${staleCount})`
+                  : `${STATUS_CONFIG[f].label} (${counts[f] ?? 0})`}
               </button>
             ))}
           </div>
@@ -209,7 +238,9 @@ export default function ExperimentsPage() {
             <div className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-violet-500" />
               <CardTitle className="text-sm font-semibold">
-                {statusFilter === "all" ? `All experiments` : `${STATUS_CONFIG[statusFilter].label} experiments`}
+                {statusFilter === "all" ? `All experiments`
+                  : statusFilter === "stale" ? `Stale experiments`
+                  : `${STATUS_CONFIG[statusFilter].label} experiments`}
               </CardTitle>
               {statusFilter !== "all" && (
                 <CardDescription className="text-xs">
