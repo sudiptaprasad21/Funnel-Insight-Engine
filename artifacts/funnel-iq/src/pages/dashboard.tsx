@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info, BarChart2 } from "lucide-react";
+import { Users, MousePointerClick, ShoppingCart, Target, BrainCircuit, RefreshCw, Repeat2, Heart, HeartOff, TrendingDown, TrendingUp, FileSpreadsheet, ExternalLink, Check, Lightbulb, FlaskConical, Sparkles, AlertTriangle, Info, BarChart2 } from "lucide-react";
 
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState, type ReactNode } from "react";
@@ -115,7 +115,7 @@ export default function DashboardPage() {
             title="Repeat Rate"
             value={summary ? `${(summary.repeatCustomerRate * 100).toFixed(1)}%` : undefined}
             loading={summaryLoading}
-            icon={<RefreshCw className="h-4 w-4 text-orange-500" />}
+            icon={<Repeat2 className="h-4 w-4 text-purple-500" />}
           />
           <MetricCard
             title="Total Customers"
@@ -127,7 +127,7 @@ export default function DashboardPage() {
             title="Active Subscribers"
             value={customerTrends?.activeSubscriptions}
             loading={trendsLoading}
-            icon={<TrendingUp className="h-4 w-4 text-emerald-500" />}
+            icon={<RefreshCw className="h-4 w-4 text-green-500" />}
           />
         </div>
 
