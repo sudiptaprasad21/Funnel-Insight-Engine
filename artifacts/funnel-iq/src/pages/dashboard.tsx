@@ -444,49 +444,49 @@ export default function DashboardPage() {
                   const metrics = [
                     {
                       label: "Product → Cart Rate",
-                      definition: "Of all product-view events, how many led to an add-to-cart",
+                      definition: "Add-to-cart events ÷ product-view events. One session browsing 10 products counts as 10 product-view events, so this measures click-through intensity, not unique visitors.",
                       value: pct(summary.addToCart, summary.productViews),
-                      fraction: `${summary.addToCart} of ${summary.productViews} product views`,
+                      fraction: `${summary.addToCart} add-to-cart events from ${summary.productViews} product-view events`,
                       higherIsBetter: true,
                       good: 8, warn: 4,
                     },
                     {
                       label: "Cart → Purchase Rate",
-                      definition: "Of sessions that added to cart, how many completed a purchase",
+                      definition: "Purchase events ÷ add-to-cart events. May show 100% if purchases exceed add-to-cart events — this happens when some users go directly to checkout without an explicit cart step being recorded.",
                       value: pct(summary.purchases, summary.addToCart),
-                      fraction: `${summary.purchases} of ${summary.addToCart} cart sessions`,
+                      fraction: `${summary.purchases} purchase events from ${summary.addToCart} add-to-cart events`,
                       higherIsBetter: true,
                       good: 60, warn: 40,
                     },
                     {
                       label: "Wishlist Utilisation",
-                      definition: "Of items saved to wishlist, how many were later moved to cart",
+                      definition: "Wishlist-to-cart moves ÷ wishlist-save events. Measures how many saved items were eventually acted on.",
                       value: pct(summary.wishlistToCart, summary.addToWishlist),
-                      fraction: `${summary.wishlistToCart} of ${summary.addToWishlist} wishlist adds`,
+                      fraction: `${summary.wishlistToCart} moved-to-cart events from ${summary.addToWishlist} wishlist-save events`,
                       higherIsBetter: true,
                       good: 50, warn: 20,
                     },
                     {
                       label: "Cart Abandon Rate",
-                      definition: "Of sessions with items in cart, how many left without buying",
+                      definition: "Cart-abandon events ÷ add-to-cart events. Each time a user adds to cart and leaves without buying, one abandon event is recorded.",
                       value: pct(summary.cartAbandons, summary.addToCart),
-                      fraction: `${summary.cartAbandons} of ${summary.addToCart} cart sessions`,
+                      fraction: `${summary.cartAbandons} abandon events from ${summary.addToCart} add-to-cart events`,
                       higherIsBetter: false,
                       good: 30, warn: 60,
                     },
                     {
                       label: "Subscription Conversion",
-                      definition: "Of sessions that showed subscription intent, how many subscribed",
+                      definition: "Subscription completions ÷ subscription-intent events. One session can fire intent multiple times (e.g. opening the subscription panel twice), so the rate can be below 100% even if every interested user subscribed.",
                       value: pct(summary.subscriptions, summary.intendedSubscriptions),
-                      fraction: `${summary.subscriptions} of ${summary.intendedSubscriptions} intent sessions`,
+                      fraction: `${summary.subscriptions} subscriptions from ${summary.intendedSubscriptions} intent events`,
                       higherIsBetter: true,
                       good: 50, warn: 25,
                     },
                     {
                       label: "Browse-only Rate",
-                      definition: "Sessions that viewed products but never added to cart or showed subscription intent",
+                      definition: "Browse-only events ÷ total unique visitor sessions. A browse-only event fires when a visitor views products but never adds to cart or shows subscription intent.",
                       value: pct(summary.browseOnlyCount, summary.totalVisitors),
-                      fraction: `${summary.browseOnlyCount} of ${summary.totalVisitors} sessions`,
+                      fraction: `${summary.browseOnlyCount} browse-only events from ${summary.totalVisitors} unique sessions`,
                       higherIsBetter: false,
                       good: 30, warn: 60,
                     },
@@ -565,6 +565,46 @@ export default function DashboardPage() {
                             <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{m.fraction}</p>
                           </div>
                         ))}
+                      </div>
+
+                      {/* How to read — methodology note */}
+                      <div className="rounded-xl border border-blue-200/60 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-3">
+                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">How to read these cards</p>
+                        <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                          <p>
+                            <span className="font-semibold">These cards count events, not sessions.</span>{" "}
+                            A single visitor browsing 10 products generates 10 product-view events. This makes rates here measure
+                            action intensity — useful for spotting friction in specific steps.
+                          </p>
+                          <p>
+                            <span className="font-semibold">The Funnel Drop-off bars above count unique sessions</span>{" "}
+                            — each visitor counted once per stage regardless of how many times they triggered it. That's why
+                            the same concept (e.g. "Add to Cart") shows different numbers in each section.
+                          </p>
+                          <p className="font-semibold text-slate-700 dark:text-slate-200">Example with live data:</p>
+                          <ul className="space-y-1 pl-3 border-l-2 border-blue-300 dark:border-blue-700">
+                            <li>
+                              <span className="font-medium">Product → Cart Rate = {Math.round((summary.addToCart / Math.max(summary.productViews, 1)) * 100)}%</span>
+                              {" "}— {summary.addToCart} add-to-cart events recorded across {summary.productViews} product-view events
+                              (from {summary.totalVisitors} unique visitors). High product-view count is normal: one visitor scrolling
+                              past multiple products fires multiple events.
+                            </li>
+                            <li>
+                              <span className="font-medium">Cart → Purchase = {Math.min(100, Math.round((summary.purchases / Math.max(summary.addToCart, 1)) * 100))}%{summary.purchases > summary.addToCart ? " (capped)" : ""}</span>
+                              {" "}— {summary.purchases} purchases from {summary.addToCart} add-to-cart events.
+                              {summary.purchases > summary.addToCart
+                                ? ` Purchases exceed cart events because ${summary.purchases - summary.addToCart} user(s) went directly to checkout without triggering an add-to-cart event — capped at 100%.`
+                                : " All purchases were preceded by a recorded cart action."}
+                            </li>
+                            <li>
+                              <span className="font-medium">Subscription Conversion = {Math.min(100, Math.round((summary.subscriptions / Math.max(summary.intendedSubscriptions, 1)) * 100))}%</span>
+                              {" "}— {summary.subscriptions} subscriptions from {summary.intendedSubscriptions} intent events.
+                              {summary.intendedSubscriptions > summary.subscriptions
+                                ? ` ${summary.intendedSubscriptions - summary.subscriptions} intent event(s) did not convert — a user may open the subscription panel more than once before deciding.`
+                                : ""}
+                            </li>
+                          </ul>
+                        </div>
                       </div>
 
                       {/* Benchmark legend */}
