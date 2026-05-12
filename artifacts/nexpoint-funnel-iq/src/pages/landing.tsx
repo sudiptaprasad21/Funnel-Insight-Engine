@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star, BarChart2, ArrowRight } from "lucide-react";
 import { useListProducts, getListProductsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -183,11 +183,15 @@ export default function LandingPage() {
       {/* Demo overlay */}
       <div className="bg-slate-900 text-white p-3 text-center text-sm font-medium flex items-center justify-center gap-4">
         <span>Happy Mom demo store — every interaction is tracked in real time.</span>
-        <Button asChild variant="secondary" size="sm" className="h-8">
-          <a href="/manager-view/dashboard" data-testid="link-view-analytics">
-            View Campaign Analytics
-          </a>
-        </Button>
+        <a
+          href="/manager-view/dashboard"
+          data-testid="link-view-analytics"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 font-medium text-xs hover:bg-violet-100 hover:border-violet-300 transition-colors"
+        >
+          <BarChart2 className="h-3.5 w-3.5" />
+          Managerial View — Funnel IQ Console
+          <ArrowRight className="h-3 w-3" />
+        </a>
       </div>
 
       {/* Header */}
@@ -602,11 +606,15 @@ export default function LandingPage() {
         </p>
         <div className="pt-8 border-t border-slate-800 text-sm flex flex-col items-center gap-4">
           <p>© 2026 Happy Mom Demo Store. All rights reserved.</p>
-          <Button asChild variant="link" className="text-slate-300 hover:text-white">
-            <a href="/manager-view/dashboard" data-testid="link-footer-analytics">
-              Growth Manager Login →
-            </a>
-          </Button>
+          <a
+            href="/manager-view/dashboard"
+            data-testid="link-footer-analytics"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 font-medium text-xs hover:bg-violet-100 hover:border-violet-300 transition-colors"
+          >
+            <BarChart2 className="h-3.5 w-3.5" />
+            Managerial View — Funnel IQ Console
+            <ArrowRight className="h-3 w-3" />
+          </a>
         </div>
       </footer>
 
