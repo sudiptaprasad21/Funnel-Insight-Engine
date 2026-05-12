@@ -1,6 +1,6 @@
 # Funnel IQ — AI-Powered Funnel Drop-off Diagnosis Engine
 
-**Track 3: Marketing & Growth | Full-Stack Prototype**
+**Marketing & Growth | Full-Stack Prototype**
 
 > When growth managers see funnel drop-off, they need to know *why* and *what to test*—not generic advice. Funnel IQ diagnoses the cause from real event data and generates specific, testable hypotheses.
 
