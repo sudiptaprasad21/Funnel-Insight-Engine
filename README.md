@@ -660,4 +660,4 @@ MIT License. See `LICENSE` file for details.
 
 ---
 
-**Built with ❤️ | Track 3: Marketing & Growth | May 2026**
+**Built with Replit | May 2026**
