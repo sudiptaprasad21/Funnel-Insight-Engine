@@ -342,8 +342,14 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <footer className="py-6 text-center text-xs text-slate-400 border-t border-slate-100">
-        © 2026 Happy Mom Demo Store. All rights reserved.
+      <footer className="py-6 text-center text-xs text-slate-400 border-t border-slate-100 space-y-2">
+        <p>© 2026 Happy Mom Demo Store. All rights reserved.</p>
+        <a
+          href="/manager-view/dashboard"
+          className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          Managerial View →
+        </a>
       </footer>
     </div>
   );
