@@ -10,7 +10,7 @@ import {
   registerCredential,
   verifyCredential,
 } from "@/lib/auth";
-import { Phone, Mail, User, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
+import { Phone, Mail, User, Lock, ArrowRight, Loader2, Eye, EyeOff, BarChart2 } from "lucide-react";
 
 async function createCustomer(
   name: string,
@@ -342,13 +342,15 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <footer className="py-6 text-center text-xs text-slate-400 border-t border-slate-100 space-y-2">
+      <footer className="py-6 text-center text-xs text-slate-400 border-t border-slate-100 space-y-3">
         <p>© 2026 Happy Mom Demo Store. All rights reserved.</p>
         <a
           href="/manager-view/dashboard"
-          className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-600 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 font-medium text-xs hover:bg-violet-100 hover:border-violet-300 transition-colors"
         >
-          Managerial View →
+          <BarChart2 className="h-3.5 w-3.5" />
+          Managerial View — Funnel IQ Console
+          <ArrowRight className="h-3 w-3" />
         </a>
       </footer>
     </div>
