@@ -181,12 +181,21 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#FFFBF9] font-sans">
       {/* Demo overlay */}
-      <div className="bg-slate-900 text-white p-3 text-center text-sm font-medium flex items-center justify-center gap-4">
-        <span>Happy Mom demo store — every interaction is tracked in real time.</span>
+      <div className="bg-slate-900 text-white px-5 py-2.5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5 text-sm text-slate-300 min-w-0">
+          <span className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="truncate">
+            <span className="font-semibold text-white">Live Demo</span>
+            <span className="hidden sm:inline"> — Happy Mom store · every interaction tracked in real time</span>
+          </span>
+        </div>
         <a
           href="/manager-view/dashboard"
           data-testid="link-view-analytics"
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 font-medium text-xs hover:bg-violet-100 hover:border-violet-300 transition-colors"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-violet-600 text-white font-medium text-xs hover:bg-violet-700 active:bg-violet-800 transition-colors shrink-0 shadow-sm"
         >
           <BarChart2 className="h-3.5 w-3.5" />
           Managerial View — Funnel IQ Console
