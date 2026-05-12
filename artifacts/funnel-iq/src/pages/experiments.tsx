@@ -93,20 +93,14 @@ export default function ExperimentsPage() {
     : statusFilter === "stale" ? all.filter(isStale)
     : all.filter(e => (e.status ?? "proposed") === statusFilter);
 
-  // Sort: stale active experiments first, then merge-noted, then by createdAt per sortOrder
+  // Sort: user-chosen date order is the primary key; merge-noted items surface within ties
   const filtered = [...base].sort((a, b) => {
-    const staleScore = (e: typeof a) => {
-      const lastActivity = e.updatedAt ?? e.createdAt;
-      const days = Math.floor((Date.now() - new Date(lastActivity).getTime()) / (1000 * 60 * 60 * 24));
-      return (days > 14 && (e.status === "proposed" || e.status === "running")) ? days : 0;
-    };
-    const diff = staleScore(b) - staleScore(a);
-    if (diff !== 0) return diff;
-    // merge-noted experiments next
-    if (!!b.mergeNote !== !!a.mergeNote) return !!b.mergeNote ? 1 : -1;
     const dateA = new Date(a.createdAt).getTime();
     const dateB = new Date(b.createdAt).getTime();
-    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    if (dateA !== dateB) return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    // secondary: merge-noted first
+    if (!!b.mergeNote !== !!a.mergeNote) return !!b.mergeNote ? 1 : -1;
+    return 0;
   });
 
   const counts: Record<string, number> = { proposed: 0, running: 0, completed: 0, archived: 0 };
