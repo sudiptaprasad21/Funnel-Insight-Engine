@@ -346,6 +346,8 @@ export default function AuthPage() {
         <p>© 2026 Happy Mom Demo Store. All rights reserved.</p>
         <a
           href="/manager-view/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 font-medium text-xs hover:bg-violet-100 hover:border-violet-300 transition-colors"
         >
           <BarChart2 className="h-3.5 w-3.5" />

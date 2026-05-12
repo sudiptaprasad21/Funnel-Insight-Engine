@@ -195,6 +195,8 @@ export default function LandingPage() {
         <a
           href="/manager-view/dashboard"
           data-testid="link-view-analytics"
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-violet-600 text-white font-medium text-xs hover:bg-violet-700 active:bg-violet-800 transition-colors shrink-0 shadow-sm"
         >
           <BarChart2 className="h-3.5 w-3.5" />
@@ -618,6 +620,8 @@ export default function LandingPage() {
           <a
             href="/manager-view/dashboard"
             data-testid="link-footer-analytics"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 font-medium text-xs hover:bg-violet-100 hover:border-violet-300 transition-colors"
           >
             <BarChart2 className="h-3.5 w-3.5" />
