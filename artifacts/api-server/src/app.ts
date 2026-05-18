@@ -3,7 +3,9 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 // @ts-ignore
-import pinoHttp from "pino-http";
+import pinoHttpImport from "pino-http";
+
+const pinoHttp: any = pinoHttpImport;
 
 const app = express();
 
