@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { runHealthAudit } from "./routes/health-audit";
 import { db } from "@workspace/db";
 import { settingsTable } from "@workspace/db";
+import router from "./routes/index.js";
 
 const rawPort = process.env["PORT"];
 
@@ -17,6 +18,9 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+// Mount all API routes under /api prefix
+app.use("/api", router);
 
 app.listen(port, (err) => {
   if (err) {
