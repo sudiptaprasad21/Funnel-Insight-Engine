@@ -1,4 +1,4 @@
-# Funnel IQ — AI-Powered Funnel Drop-off Diagnosis Engine
+# Funnel IQ : AI-Powered Funnel Drop-off Diagnosis Engine
 
 **Marketing & Growth | Full-Stack Prototype**
 
