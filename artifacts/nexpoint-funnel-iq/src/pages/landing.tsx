@@ -157,7 +157,7 @@ export default function LandingPage() {
     const customerId = getStoredCustomerId();
     if (customerId) {
       try {
-        const resp = await fetch(`/api/customers/${customerId}`, {
+        const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/customers/${customerId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ isSubscribed: true, subscriptionPlan: "nappy-monthly" }),
