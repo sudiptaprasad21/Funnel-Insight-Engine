@@ -17,7 +17,7 @@ export const trackFunnelEvent = async (
   customerId?: number
 ) => {
   try {
-    await fetch("/api/events", {
+    await fetch(`${import.meta.env.VITE_API_URL}/api/events`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
