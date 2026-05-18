@@ -5,14 +5,11 @@ import cookieParser from "cookie-parser";
 // @ts-ignore
 import pinoHttp from "pino-http";
 
-import { logger } from "./logger.js";
-
 const app = express();
 
 app.use(
   pinoHttp({
-    logger,
-    serializers: {
+      serializers: {
       req(req: any) {
         return {
           id: req.id,
