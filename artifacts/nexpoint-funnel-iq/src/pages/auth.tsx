@@ -17,7 +17,7 @@ async function createCustomer(
   email: string,
   source: string
 ): Promise<{ id: number; name: string }> {
-  const res = await fetch("/api/customers", {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/customers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
