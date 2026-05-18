@@ -3,7 +3,7 @@ import { logger } from "./lib/logger";
 import { runHealthAudit } from "./routes/health-audit";
 import { db } from "@workspace/db";
 import { settingsTable } from "@workspace/db";
-import router from "./routes/index.js";
+import router from "./routes/index";
 
 const rawPort = process.env["PORT"];
 
