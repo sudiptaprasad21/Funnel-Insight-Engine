@@ -1,9 +1,4 @@
 {
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "dist",
-  "functions": {
-    "dist/index.mjs": {
-      "runtime": "node@20.x"
-    }
-  }
-}
+     "buildCommand": "pnpm run build",
+     "outputDirectory": "dist"
+   }
